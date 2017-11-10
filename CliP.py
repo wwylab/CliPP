@@ -10,7 +10,7 @@ import scipy as sp
 import scipy.sparse
 from scipy.special import logit
 from scipy.special import expit
-# the thresholding function
+# the Soft Thresholding function
 def ST(x, lam):
 	val = np.abs(x) - lam;
 	val = np.sign(x)*(val > 0) * val
@@ -19,26 +19,26 @@ def ST(x, lam):
 # The CliP function
 def CliP(r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, 
          control_large, least_mut, post_th, least_diff, coef, wcut):
-	No_mutation     = len(r)
-	NO_MUTATION     = len(r)
-	theta_hat      	= r / n
-	phi_hat         = ploidy / ( minor / theta_hat - total + ploidy )
-	scale_parameter = np.max( [1, np.max(phi_hat)] )
-	phi_new         = phi_hat / scale_parameter
+	No_mutation                                = len(r)
+	NO_MUTATION                                = len(r)
+	theta_hat                                  = r / n
+	phi_hat                                    = ploidy / ( minor / theta_hat - total + ploidy )
+	scale_parameter                            = np.max( [1, np.max(phi_hat)] )
+	phi_new                                    = phi_hat / scale_parameter
 	phi_new[ phi_new > expit(control_large) ]  = expit(control_large)
 	phi_new[ phi_new < expit(-control_large) ] = expit(-control_large)
-	w_new           = logit(phi_new)
+	w_new                                      = logit(phi_new)
 	w_new[w_new > control_large]	     	   = control_large
-	w_new[w_new < -control_large] 			   = -control_large
-	k               = 0 # iterator
-	diff            = np.subtract.outer(w_new,w_new)
-	ids             = np.triu_indices(diff.shape[1],1)
-	eta_new         = diff[ids]
-	tau_new         = np.ones((int(No_mutation * (No_mutation - 1) / 2), 1))
-	col_id          = np.append(np.array(range(int(No_mutation * (No_mutation - 1) / 2))), np.array(range(int(No_mutation * (No_mutation - 1) / 2))))
-	row1            = np.zeros(int(No_mutation * (No_mutation - 1) / 2))
-	row2			= np.zeros(int(No_mutation * (No_mutation - 1) / 2))
-	starting        = 0
+	w_new[w_new < -control_large] 		   = -control_large
+	k                                          = 0 # iterator
+	diff                                       = np.subtract.outer(w_new,w_new)
+	ids                                        = np.triu_indices(diff.shape[1],1)
+	eta_new                                    = diff[ids]
+	tau_new                                    = np.ones((int(No_mutation * (No_mutation - 1) / 2), 1))
+	col_id                                     = np.append(np.array(range(int(No_mutation * (No_mutation - 1) / 2))), np.array(range(int(No_mutation * (No_mutation - 1) / 2))))
+	row1                                       = np.zeros(int(No_mutation * (No_mutation - 1) / 2))
+	row2		                           = np.zeros(int(No_mutation * (No_mutation - 1) / 2))
+	starting                                   = 0
 	for i in range(No_mutation-1):
 		row1[starting:(starting + No_mutation - i - 1)] = i
 		row2[starting:(starting + No_mutation - i - 1)] = np.array(range(No_mutation))[(i+1) :]
@@ -72,11 +72,11 @@ def CliP(r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, preci
 		residual = np.max(diff[ids] - eta_new)
 	# assign mutations based on the distance matrix
 	eta_new[np.where(np.abs(eta_new) <= post_th)] = 0
-	diff[ids] = eta_new
-	class_label = -np.ones(No_mutation)
+	diff[ids]      = eta_new
+	class_label    = -np.ones(No_mutation)
 	class_label[0] = 0
-	group_size = [1]
-	labl = 1
+	group_size     = [1]
+	labl           =  1
 	for i in range(1,No_mutation):
 		for j in range(i):
 			if diff[j,i] == 0:
@@ -89,64 +89,64 @@ def CliP(r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, preci
 			group_size.append(1)
 	# quality control
 	tmp_size = np.min(np.array(group_size)[np.array(group_size) > 0])
-	tmp_grp = np.where(group_size==tmp_size)
-	refine = False
+	tmp_grp  = np.where(group_size==tmp_size)
+	refine   = False
 	if tmp_size < least_mut:
 		refine = True
 	while refine :
-		refine = False
+		refine  = False
 		tmp_col = np.where(class_label == tmp_grp[0][0])[0]
 		for i in range(len(tmp_col)):
 			if tmp_col[i] != 0 and tmp_col[i] != No_mutation-1:
-				tmp_diff = np.abs( np.append(np.append(diff[0:tmp_col[i], tmp_col[i] ].T.ravel(), 100), diff[tmp_col[i], (tmp_col[i]+1):No_mutation ].ravel()) )
-				tmp_diff[tmp_col] += 100
-				diff[0:tmp_col[i], tmp_col[i]] = tmp_diff[0:tmp_col[i]]
+				tmp_diff                                      = np.abs( np.append(np.append(diff[0:tmp_col[i], tmp_col[i] ].T.ravel(), 100), diff[tmp_col[i], (tmp_col[i]+1):No_mutation ].ravel()) )
+				tmp_diff[tmp_col]                            += 100
+				diff[0:tmp_col[i], tmp_col[i]]                = tmp_diff[0:tmp_col[i]]
 				diff[tmp_col[i], (tmp_col[i]+1):No_mutation ] = tmp_diff[(tmp_col[i]+1):No_mutation]
 			elif tmp_col[i] == 0:
-				tmp_diff = np.append(100,diff[0,1:No_mutation])
-				tmp_diff[tmp_col] += 100
+				tmp_diff              = np.append(100,diff[0,1:No_mutation])
+				tmp_diff[tmp_col]    += 100
 				diff[0,1:No_mutation] = tmp_diff[1:No_mutation]
 			else:
-				tmp_diff = np.append(diff[0:(No_mutation-1),No_mutation-1],100)
-				tmp_diff[tmp_col] += 100
+				tmp_diff                               = np.append(diff[0:(No_mutation-1),No_mutation-1],100)
+				tmp_diff[tmp_col]                     += 100
 				diff[0:(No_mutation-1), No_mutation-1] = tmp_diff[0:(No_mutation-1)]
 			ind = tmp_diff.argmin()
 			group_size[class_label.astype(np.int64,copy=False)[tmp_col[i]]] -= 1
-			class_label[tmp_col[i]]=class_label[ind]
+			class_label[tmp_col[i]]                                          =class_label[ind]
 			group_size[class_label.astype(np.int64,copy=False)[tmp_col[i]]] += 1
 		tmp_size = np.min(np.array(group_size)[np.array(group_size) > 0])
-		tmp_grp = np.where(group_size==tmp_size)
-		refine = False
+		tmp_grp  = np.where(group_size==tmp_size)
+		refine   = False
 		if tmp_size < least_mut:
 			refine = True
-	labels = np.unique(class_label)
+	labels  = np.unique(class_label)
 	phi_out = np.zeros(len(labels))
 	for i in range(len(labels)):
-		ind = np.where(class_label == labels[i])[0]
+		ind              = np.where(class_label == labels[i])[0]
 		class_label[ind] = i
-		phi_out[i] = np.sum(phi_hat[ind] *n[ind]) / np.sum(n[ind])
+		phi_out[i]       = np.sum(phi_hat[ind] *n[ind]) / np.sum(n[ind])
 	if len(labels) > 1:
 		sort_phi = np.sort(phi_out)
 		phi_diff = sort_phi[1:] - sort_phi[:-1]
-		min_val = phi_diff.min()
-		min_ind = phi_diff.argmin()
+		min_val  = phi_diff.min()
+		min_ind  = phi_diff.argmin()
 		while min_val < least_diff:
-			combine_ind = np.where(phi_out == sort_phi[min_ind])[0]
-			combine_to_ind = np.where(phi_out == sort_phi[min_ind+1])[0]
+			combine_ind                             = np.where(phi_out == sort_phi[min_ind])[0]
+			combine_to_ind                          = np.where(phi_out == sort_phi[min_ind+1])[0]
 			class_label[class_label == combine_ind] = combine_to_ind
-			labels = np.unique(class_label)
-			phi_out = np.zeros(len(labels))
+			labels                                  = np.unique(class_label)
+			phi_out                                 = np.zeros(len(labels))
 			for i in range(len(labels)):
-				ind = np.where(class_label == labels[i])[0]
+				ind              = np.where(class_label == labels[i])[0]
 				class_label[ind] = i
-				phi_out[i] = np.sum(phi_hat[ind] *n[ind]) / np.sum(n[ind])
+				phi_out[i]       = np.sum(phi_hat[ind] *n[ind]) / np.sum(n[ind])
 			if len(labels) == 1:
 				break
 			else:
 				sort_phi = np.sort(phi_out)
 				phi_diff = sort_phi[1:] - sort_phi[:-1]
-				min_val = phi_diff.min()
-				min_ind = phi_diff.argmin()
+				min_val  = phi_diff.min()
+				min_ind  = phi_diff.argmin()
 	phi_res = np.zeros(No_mutation)
 	for lab in range(len(phi_out)):
 		phi_res[class_label == lab] = phi_out[lab]

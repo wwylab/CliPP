@@ -14,13 +14,13 @@ sys.argv = ['/Users/kaixiany/Working/CliP/Sample_data/intermediate/', '/Users/ka
 import os
 import sys
 import numpy as np
-sys.path.insert(0,sys.argv[4])
+sys.path.insert(0,sys.argv[3])
 from CliP import *
 from numpy import genfromtxt
 prefix = sys.argv[1]
 if not os.path.exists(sys.argv[2]):
     os.makedirs(sys.argv[2])
-Lambda    = float(sys.argv[3])
+Lambda    = float(sys.argv[4])
 No_subsampling = int(sys.argv[5])
 rep = int(sys.argv[6])
 window_size = float(sys.argv[7])

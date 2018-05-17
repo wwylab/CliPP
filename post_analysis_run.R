@@ -16,6 +16,7 @@ input.prefix        <- args[1]
 preprocessed.prefix <- args[2]
 output.prefix       <- args[3]
 lam                 <- args[4]
+filtering           <- as.numeric(args[5])
 threshold           <- 0.1
 clonalFrac          <- 0.3
 least.ratio         <- 0.05
@@ -25,12 +26,9 @@ RATIO.TH            <- 0.90
 if(!dir.exists(output.prefix)){
 	dir.create(output.prefix)
 }
-for(x in samples){
-cat("\rk=",k)
-k<- k+1
 outfile1 <- sprintf("%s/lam%s_phi.txt", input.prefix, lam)
 outfile2 <- sprintf("%s/lam%s_label.txt", input.prefix, lam)
-outfile3 <- sprintf("%s/lam%s_rep", input.prefix, lam)
+outfile3 <- sprintf("lam%s_rep", lam)
 ifsubsample <- list.files(input.prefix,pattern = outfile3,full.names=T)
 if( file.exists(outfile1) || file.exists(outfile2) ){
 	if(!file.exists(outfile1)){
@@ -157,155 +155,151 @@ if(filtering == 1){
 		write.table(label, file = sprintf("%s/mutation_assignments.txt",
                                 output.prefix), quote = F, sep = "\t", 
            col.names = F, row.names = F )
-		   }
-		stop(sprintf('There is only one clone in this sample, no further filtering is needed.'))
-	}
-	suma <- suma[order(suma[,3],decreasing = F),]
-	No.outposition <- 0
-	if(file.exists(outlier)){
-		outposition <- read.table(outlier,header=F)
-		No.outposition <- nrow(outposition)
-	}
-	least.mut <- least.ratio * (length(phi)+No.outposition)
-   refine <- F
-   No.cls <- dim(suma)[1]
-   # filter 1: super clusters
-   if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac){
-     refine <- T
-   }
-   while(refine){
-     refine <- F
-     ind     <- c(which(label == suma[No.cls, 1]), which(label == suma[No.cls-1,1]))
-     new.phi <- (suma[No.cls, 2]*suma[No.cls, 3] + 
-                 suma[No.cls-1, 2]*suma[No.cls-1, 3]) / 
-                (suma[No.cls, 2] + suma[No.cls-1, 2])
-     new.label  <- suma[No.cls, 1]
-     phi[ind]   <- new.phi
-     label[ind] <- new.label
-     No.cls     <- No.cls - 1
-     suma <- matrix(NA, ncol = 3, nrow = No.cls)
-     suma[, 3] <- sort(unique(phi),decreasing = F)
-     suma[, 1] <- unlist(lapply(suma[, 3],
-                               function(y){
-                                 unique(label[which(phi == y)])
-                               }))
-     suma[, 2] <- unlist(lapply(suma[, 1],
-                                function(y){
-                                  length(which(label == y))
-                                }))
-     if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac){
-       refine <- T
-     }
-   }
+		   
+		cat(sprintf('There is only one clone in this sample, no further filtering is needed.'))
+	}else{
+		suma <- suma[order(suma[,3],decreasing = F),]
+		least.mut <- least.ratio * length(phi)
+	   refine <- F
+	   No.cls <- dim(suma)[1]
+	   # filter 1: super clusters
+	   if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac){
+	     refine <- T
+	   }
+	   while(refine){
+	     refine <- F
+	     ind     <- c(which(label == suma[No.cls, 1]), which(label == suma[No.cls-1,1]))
+	     new.phi <- (suma[No.cls, 2]*suma[No.cls, 3] + 
+	                 suma[No.cls-1, 2]*suma[No.cls-1, 3]) / 
+	                (suma[No.cls, 2] + suma[No.cls-1, 2])
+	     new.label  <- suma[No.cls, 1]
+	     phi[ind]   <- new.phi
+	     label[ind] <- new.label
+	     No.cls     <- No.cls - 1
+	     suma <- matrix(NA, ncol = 3, nrow = No.cls)
+	     suma[, 3] <- sort(unique(phi),decreasing = F)
+	     suma[, 1] <- unlist(lapply(suma[, 3],
+	                               function(y){
+	                                 unique(label[which(phi == y)])
+	                               }))
+	     suma[, 2] <- unlist(lapply(suma[, 1],
+	                                function(y){
+	                                  length(which(label == y))
+	                                }))
+	     if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac){
+	       refine <- T
+	     }
+	   }
    
-   # filter 2: small clone
-   if(suma[No.cls,2] / sum(suma[,2]) < clonalFrac && No.cls > 2){
-     refine <- T
-   }
-   while(refine){
-     refine <- F
-     ind     <- c(which(label == suma[No.cls, 1]), which(label == suma[No.cls-1,1]))
-     new.phi <- (suma[No.cls, 2]*suma[No.cls, 3] + 
-                   suma[No.cls-1, 2]*suma[No.cls-1, 3]) / 
-       (suma[No.cls, 2] + suma[No.cls-1, 2])
-     new.label  <- suma[No.cls, 1]
-     phi[ind]   <- new.phi
-     label[ind] <- new.label
-     No.cls     <- No.cls - 1
-     suma <- matrix(NA, ncol = 3, nrow = No.cls)
-     suma[, 3] <- sort(unique(phi),decreasing = F)
-     suma[, 1] <- unlist(lapply(suma[, 3],
-                                function(y){
-                                  unique(label[which(phi == y)])
-                                }))
-     suma[, 2] <- unlist(lapply(suma[, 1],
-                                function(y){
-                                  length(which(label == y))
-                                }))
-     if(suma[No.cls,2] / sum(suma[,2]) < clonalFrac && No.cls > 2){
-       refine <- T
-     }
-   }
-   # filter 3: too close
-   if( No.cls > 2 ){
-     diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
-     if(min(diff) < threshold ){
-       refine <- T
-     }
-   }
-     while(refine){
-       min.ind <- which.min(diff) + 1
-       refine <- F
-       ind     <- c(which(label == suma[min.ind, 1]), which(label == suma[min.ind-1,1]))
-       new.phi <- (suma[min.ind, 2]*suma[min.ind, 3] + 
-                     suma[min.ind-1, 2]*suma[min.ind-1, 3]) / 
-         (suma[min.ind, 2] + suma[min.ind-1, 2])
-       new.label  <- suma[min.ind, 1]
-       phi[ind]   <- new.phi
-       label[ind] <- new.label
-       No.cls     <- No.cls - 1
-       suma <- matrix(NA, ncol = 3, nrow = No.cls)
-       suma[, 3] <- sort(unique(phi),decreasing = F)
-       suma[, 1] <- unlist(lapply(suma[, 3],
-                                  function(y){
-                                    unique(label[which(phi == y)])
-                                  }))
-       suma[, 2] <- unlist(lapply(suma[, 1],
-                                  function(y){
-                                    length(which(label == y))
-                                  }))
-       if( No.cls > 2 ){
-         diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
-         if(min(diff) < threshold ){
-           refine <- T
-         }
-       }
-       
-       
-     }
-   #### filter 4: small subclone (as defined by at least least.mut mutations)
-   if( length(which(suma[,2]<= least.mut)) > 0  && No.cls > 2 && which(suma[,2]<= least.mut)[1] != nrow(suma)){
-     refine <- T
-   }
-   while(refine){
-     refine <- F
-	 small.subc <- which(suma[,2] <= least.mut)[1]
-	 if(small.subc == 1){
-		target.ind <- 2					 
-	 } else {
-		distances <- abs(c(suma[small.subc,3]-suma[small.subc-1,3], suma[small.subc,3]-suma[small.subc+1,3]))
-		target.ind <- small.subc+which.min(distances) * 2 - 3
-	 }
-	 
-     ind     <- c(which(label == suma[small.subc, 1]), which(label == suma[target.ind,1]))
-     new.phi <- (suma[small.subc, 2]*suma[small.subc, 3] + 
-                   suma[target.ind, 2]*suma[target.ind, 3]) / 
-       (suma[small.subc, 2] + suma[target.ind, 2])
-     new.label  <- suma[small.subc, 1]
-     phi[ind]   <- new.phi
-     label[ind] <- new.label
-     No.cls     <- No.cls - 1
-     suma <- matrix(NA, ncol = 3, nrow = No.cls)
-     suma[, 3] <- sort(unique(phi),decreasing = F)
-     suma[, 1] <- unlist(lapply(suma[, 3],
-                                function(y){
-                                  unique(label[which(phi == y)])
-                                }))
-     suma[, 2] <- unlist(lapply(suma[, 1],
-                                function(y){
-                                  length(which(label == y))
-                                }))
-     if(length(which(suma[,2]<= least.mut)) > 0 && No.cls > 2 && which(suma[,2]<= least.mut)[1] != nrow(suma) ){
-       refine <- T
-     }
-   }
-}   
-
-write.table(suma, file = sprintf("%s/subclonal_structure.txt",
+	   # filter 2: small clone
+	   if(suma[No.cls,2] / sum(suma[,2]) < clonalFrac && No.cls > 2){
+	     refine <- T
+	   }
+	   while(refine){
+	     refine <- F
+	     ind     <- c(which(label == suma[No.cls, 1]), which(label == suma[No.cls-1,1]))
+	     new.phi <- (suma[No.cls, 2]*suma[No.cls, 3] + 
+	                   suma[No.cls-1, 2]*suma[No.cls-1, 3]) / 
+	       (suma[No.cls, 2] + suma[No.cls-1, 2])
+	     new.label  <- suma[No.cls, 1]
+	     phi[ind]   <- new.phi
+	     label[ind] <- new.label
+	     No.cls     <- No.cls - 1
+	     suma <- matrix(NA, ncol = 3, nrow = No.cls)
+	     suma[, 3] <- sort(unique(phi),decreasing = F)
+	     suma[, 1] <- unlist(lapply(suma[, 3],
+	                                function(y){
+	                                  unique(label[which(phi == y)])
+	                                }))
+	     suma[, 2] <- unlist(lapply(suma[, 1],
+	                                function(y){
+	                                  length(which(label == y))
+	                                }))
+	     if(suma[No.cls,2] / sum(suma[,2]) < clonalFrac && No.cls > 2){
+	       refine <- T
+	     }
+	   }
+	   # filter 3: too close
+	   if( No.cls > 2 ){
+	     diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
+	     if(min(diff) < threshold ){
+	       refine <- T
+	     }
+	   }
+	     while(refine){
+	       min.ind <- which.min(diff) + 1
+	       refine <- F
+	       ind     <- c(which(label == suma[min.ind, 1]), which(label == suma[min.ind-1,1]))
+	       new.phi <- (suma[min.ind, 2]*suma[min.ind, 3] + 
+	                     suma[min.ind-1, 2]*suma[min.ind-1, 3]) / 
+	         (suma[min.ind, 2] + suma[min.ind-1, 2])
+	       new.label  <- suma[min.ind, 1]
+	       phi[ind]   <- new.phi
+	       label[ind] <- new.label
+	       No.cls     <- No.cls - 1
+	       suma <- matrix(NA, ncol = 3, nrow = No.cls)
+	       suma[, 3] <- sort(unique(phi),decreasing = F)
+	       suma[, 1] <- unlist(lapply(suma[, 3],
+	                                  function(y){
+	                                    unique(label[which(phi == y)])
+	                                  }))
+	       suma[, 2] <- unlist(lapply(suma[, 1],
+	                                  function(y){
+	                                    length(which(label == y))
+	                                  }))
+	       if( No.cls > 2 ){
+	         diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
+	         if(min(diff) < threshold ){
+	           refine <- T
+	         }
+	       }
+	       
+	       
+	     }
+	   #### filter 4: small subclone (as defined by at least least.mut mutations)
+	   if( length(which(suma[,2]<= least.mut)) > 0  && No.cls > 2 && which(suma[,2]<= least.mut)[1] != nrow(suma)){
+	     refine <- T
+	   }
+	   while(refine){
+	     refine <- F
+		 small.subc <- which(suma[,2] <= least.mut)[1]
+		 if(small.subc == 1){
+			target.ind <- 2					 
+		 } else {
+			distances <- abs(c(suma[small.subc,3]-suma[small.subc-1,3], suma[small.subc,3]-suma[small.subc+1,3]))
+			target.ind <- small.subc+which.min(distances) * 2 - 3
+		 }
+		 
+	     ind     <- c(which(label == suma[small.subc, 1]), which(label == suma[target.ind,1]))
+	     new.phi <- (suma[small.subc, 2]*suma[small.subc, 3] + 
+	                   suma[target.ind, 2]*suma[target.ind, 3]) / 
+	       (suma[small.subc, 2] + suma[target.ind, 2])
+	     new.label  <- suma[small.subc, 1]
+	     phi[ind]   <- new.phi
+	     label[ind] <- new.label
+	     No.cls     <- No.cls - 1
+	     suma <- matrix(NA, ncol = 3, nrow = No.cls)
+	     suma[, 3] <- sort(unique(phi),decreasing = F)
+	     suma[, 1] <- unlist(lapply(suma[, 3],
+	                                function(y){
+	                                  unique(label[which(phi == y)])
+	                                }))
+	     suma[, 2] <- unlist(lapply(suma[, 1],
+	                                function(y){
+	                                  length(which(label == y))
+	                                }))
+	     if(length(which(suma[,2]<= least.mut)) > 0 && No.cls > 2 && which(suma[,2]<= least.mut)[1] != nrow(suma) ){
+	       refine <- T
+	     }
+	   }
+	   write.table(suma, file = sprintf("%s/subclonal_structure.txt",
                    output.prefix), quote = F, sep = "\t", 
             col.names = F, row.names = F )
-write.table(label, file = sprintf("%s/mutation_assignments.txt",
-                                output.prefix), quote = F, sep = "\t", 
-           col.names = F, row.names = F )
-		   }
+		write.table(label, file = sprintf("%s/mutation_assignments.txt",
+		                                output.prefix), quote = F, sep = "\t", 
+		           col.names = F, row.names = F )
+				   
              
+	}
+}   
+

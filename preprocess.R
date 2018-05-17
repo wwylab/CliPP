@@ -7,7 +7,7 @@
 # Date: 05/04/2018
 # Email: kaixiany@163.com
 #------------------------------------------------------------#
-# The script takes commandline arguments: input_SNV input_CNV Output_dir meta_file
+# The script takes commandline arguments: input_SNV input_CNV purity_file Output_dir meta_file
 args = commandArgs(trailingOnly=TRUE)
 # debug use
 # args <- c('/Users/kaixiany/Working/CliP/Sample_data/sample_SNV.txt', '/Users/kaixiany/Working/CliP/Sample_data/sample_cnv_ver1.txt', '/Users/kaixiany/Working/CliP/Sample_data/sample_purity.txt', '/Users/kaixiany/Working/CliP/Sample_data/intermediate/', '/Users/kaixiany/Working/CliP/approximate_meta_data.Rdata')

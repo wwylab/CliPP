@@ -31,7 +31,7 @@ if(!dir.exists(output.prefix)){
 	dir.create(output.prefix, recursive = TRUE)
 }
 # some utility functions used to conduct the linear approximation
-library(parallel)
+
 theta = function(w,bv,cv,cn){
   return((exp(w)*bv)/(cn+exp(w)*cv))
 }
@@ -113,7 +113,7 @@ No.cnLines     <- nrow(cn.tmp)
 if(No.cnLines == 0){
     stop(sprintf('The sample with SNV %s does not have valid copy number status.',snv.file))
 }
-mut.cna.id     <- unlist( mclapply(1:No.mutations, 
+mut.cna.id     <- unlist( lapply(1:No.mutations, 
 						function(x){
                         ret.val <- -1
                         for(i in 1:No.cnLines){
@@ -126,7 +126,7 @@ mut.cna.id     <- unlist( mclapply(1:No.mutations,
                           
                         }
                         return(ret.val)
-                      }, mc.cores = 30 ) )
+                      } ) )
 valid.ind      <- which(mut.cna.id > 0)
 if(length(valid.ind) < VALID.CONT ){
 	stop(sprintf('The sample with SNV %s has less than %d SNVs that have valid copy number status.',snv.file,VALID.CONT))

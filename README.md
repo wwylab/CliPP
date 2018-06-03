@@ -29,7 +29,7 @@ The meta file should end with '.Rdata'
 
 In the example we have you may run
 ```
-Rscript preprocess.R Sample_data/sample_vcf.txt Sample_data/sample_cnv1.txt Sample_data/intermediate/ meta.Rdata
+Rscript preprocess.R Sample_data/sample_vcf.txt Sample_data/sample_cnv1.txt Sample_data/sample_purity.txt Sample_data/intermediate/meta.Rdata
 ```
 
 ### Running CliP

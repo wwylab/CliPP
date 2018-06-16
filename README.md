@@ -41,7 +41,7 @@ where, path_to_input is the path to the directory stores the preprocessed result
 
 In our data, you can now run
 ```
-python3 run_CliP.py Sample_data/intermediate/ Sample_data/Results_nosub/ CliP.py 0.2
+python3 run_CliP.py Sample_data/intermediate/meta.Rdata/ Sample_data/Results_nosub/ CliP.py 0.2
 ```
 
 CliP is limited by memory (a good estimates , if you do not have enough memory to process all SNVs, we do supply a downsampling strategy, one may run 

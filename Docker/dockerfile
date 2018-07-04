@@ -1,0 +1,7 @@
+FROM ubuntu:16.04
+
+## dependencies 
+RUN apt-get update
+RUN apt-get install -y software-properties-common vim
+RUN apt-get install -y r-base aptitude libcurl4-openssl-dev libxml2-dev build-essential git 
+RUN Rscript -e "install.packages('')"

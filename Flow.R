@@ -1,0 +1,50 @@
+#args[1]: snv input file
+#args[2]: cnv input file
+#args[3]: purity file
+#args[4]: output folder
+args <- commandArgs(trailingOnly = TRUE)
+if(!dir.exists('/intermediate')){
+	dir.create('/intermediate')
+}
+if(!dir.exists(args[4])){
+	dir.create(args[4],recursive = TRUE)
+}
+if(!dir.exists('/semifinal')){
+	dir.create('/semifinal')
+}
+setwd('/CliP/')
+cmd <- sprintf('python3.6 preformat.py %s %s', args[1], args[2])
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+cmd <- sprintf('Rscript preprocess.R /intermediate/snv_input.txt /intermediate/cnv_input.txt %s /intermediate/middle/ /intermediate/meta.Rdata', args[3])
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+cmd <- sprintf('python3.6 run_CliP.py /intermediate/middle/ /intermediate/results1/ /CliP/ 0.1')
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+cmd <- sprintf('Rscript post_analysis_run.R /intermediate/results1/ /intermediate/middle/ /semifinal/res1/ 0.1 1')
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+
+cmd <- sprintf('python3.6 run_CliP.py /intermediate/middle/ /intermediate/results1/ /CliP/ 0.5')
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+cmd <- sprintf('Rscript post_analysis_run.R /intermediate/results1/ /intermediate/middle/ /semifinal/res2/ 0.5 1')
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+
+cmd <- sprintf('python3.6 run_CliP.py /intermediate/middle/ /intermediate/results1/ /CliP/ 1.1')
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+cmd <- sprintf('Rscript post_analysis_run.R /intermediate/results1/ /intermediate/middle/ /semifinal/res3/ 1.1 1')
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+
+cmd <- sprintf('python3.6 run_CliP.py /intermediate/middle/ /intermediate/results1/ /CliP/ 1.5')
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+cmd <- sprintf('Rscript post_analysis_run.R /intermediate/results1/ /intermediate/middle/ /semifinal/res4/ 1.5 1')
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+cmd <- sprintf('Rscript output_results.R %s /intermediate/snv_input.txt /intermediate/middle/multiplicity.txt %s', args[3], args[4])
+a <- system(cmd,intern=TRUE,ignore.stdout = TRUE, ignore.stderr = TRUE)

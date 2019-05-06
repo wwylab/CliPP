@@ -11,12 +11,31 @@ This script takes the following argument: path_to_input path_to_output path_to_c
 Debug use
 sys.argv = ['/Users/kaixiany/Working/CliP/Sample_data/intermediate/', '/Users/kaixiany/Working/CliP/Sample_data/results/', '/Users/kaixiany/Working/CliP/', '1.5']
 '''
+import contextlib
+import ctypes
+from ctypes.util import find_library
 import os
 import sys
 import numpy as np
 sys.path.insert(0,sys.argv[3])
 from CliP import *
 from numpy import genfromtxt
+# Prioritize hand-compiled OpenBLAS library over version in /usr/lib/
+# from Ubuntu repos
+try_paths = ['/opt/OpenBLAS/lib/libopenblas.so',
+             '/lib/libopenblas.so',
+             '/usr/lib/libopenblas.so.0',
+             find_library('openblas')]
+openblas_lib = None
+for libpath in try_paths:
+    try:
+        openblas_lib = ctypes.cdll.LoadLibrary(libpath)
+        break
+    except OSError:
+        continue
+
+openblas_lib.openblas_set_num_threads(30)
+
 prefix        = sys.argv[1]
 if not os.path.exists(sys.argv[2]):
     os.makedirs(sys.argv[2])

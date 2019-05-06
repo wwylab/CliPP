@@ -2,6 +2,25 @@ FROM ubuntu:16.04
 
 ## dependencies 
 RUN apt-get update
-RUN apt-get install -y software-properties-common vim
-RUN apt-get install -y r-base aptitude libcurl4-openssl-dev libxml2-dev build-essential git 
-RUN Rscript -e "install.packages('')"
+RUN apt-get install -y software-properties-common vim libopenblas-dev
+RUN add-apt-repository ppa:jonathonf/python-3.6
+RUN apt-get update
+RUN apt-get install -y r-base
+RUN apt-get install -y aptitude libcurl4-openssl-dev libxml2-dev 
+RUN apt-get install -y build-essential python3.6 python3.6-dev python3-pip python3.6-venv
+RUN apt-get install -y git
+RUN Rscript -e "install.packages('dummies',repos ='http://mirrors.tuna.tsinghua.edu.cn/CRAN/')"
+RUN python3.6 -m pip install pip --upgrade -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN python3.6 -m pip install wheel -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN python3.6 -m pip install numpy -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN python3.6 -m pip install scipy -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN mkdir /CliP
+COPY CliP.py /CliP/
+COPY preprocess.R /CliP/
+COPY run_CliP.py /CliP/
+COPY post_analysis_run.R /CliP/
+COPY run_CliP_subsampling.py /CliP/
+COPY preformat.py /CliP/
+COPY Flow.R /CliP/
+COPY output_results.R /CliP/
+COPY compute_2B.py /CliP/

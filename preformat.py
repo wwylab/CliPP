@@ -43,3 +43,16 @@ for i in range(1,num_lines):
 	output += tmp[7:9]
 	_ = fout.write('\t'.join(output) + '\n')
 fout.close()
+
+#### Taking care of the purity file ####
+fin = open(sys.argv[3], 'r')
+lines = fin.readlines()
+fin.close()
+fout = open('/intermediate/purity.txt','w')
+_ = fout.write(lines[1].strip().split('\t')[0])
+fout.close()
+
+
+
+
+

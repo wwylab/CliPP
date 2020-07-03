@@ -13,7 +13,7 @@ lines = fin.readlines()
 fin.close()
 num_lines = len(lines)
 
-fout = open('/intermediate/snv_input.txt','w')
+fout = open('./intermediate/snv_input.txt','w')
 for i in range(num_lines):
 	if lines[i].startswith('##'):
 		continue
@@ -36,7 +36,7 @@ lines = fin.readlines()
 fin.close()
 num_lines = len(lines)
 
-fout = open('/intermediate/cnv_input.txt','w')
+fout = open('./intermediate/cnv_input.txt','w')
 for i in range(1,num_lines):
 	tmp = lines[i].strip().split('\t')
 	output = tmp[:3]
@@ -48,7 +48,7 @@ fout.close()
 fin = open(sys.argv[3], 'r')
 lines = fin.readlines()
 fin.close()
-fout = open('/intermediate/purity.txt','w')
+fout = open('./intermediate/purity.txt','w')
 _ = fout.write(lines[1].strip().split('\t')[0])
 fout.close()
 

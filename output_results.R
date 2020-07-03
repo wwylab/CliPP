@@ -3,15 +3,15 @@
 suppressMessages(library(dummies))
 args <- commandArgs(trailingOnly=TRUE)
 estimated_purity <- unlist(lapply(1:4, function(x){
-	suma <- read.table(sprintf("/semifinal/res%d/subclonal_structure.txt", x))
+	suma <- read.table(sprintf("%s/semifinal/res%d/subclonal_structure.txt",args[5], x))
 	return(max(suma[,3]))
 	}))
 purity <- unlist(read.table(args[1]))
 diff <- abs(estimated_purity - purity)
 ind <- max(which.min(diff))
 
-suma <- read.table(sprintf('/semifinal/res%d/subclonal_structure.txt',ind))
-assign <- unlist(read.table(sprintf('/semifinal/res%d/mutation_assignments.txt',ind)))
+suma <- read.table(sprintf('%s/semifinal/res%d/subclonal_structure.txt',args[5],ind))
+assign <- unlist(read.table(sprintf('%s/semifinal/res%d/mutation_assignments.txt',args[5],ind)))
 all_mut <- read.table(args[2])
 mut_out <- cbind(all_mut[,1:2],rep(-1,nrow(all_mut)),rep(0,nrow(all_mut)))
 allMutComb <- paste(all_mut[,1], all_mut[,2], sep='_')
@@ -36,8 +36,8 @@ for(i in 1:nrow(res_1C)){
 }
 res_2A <- mut_out[,3]
 res_2B <- dummy(res_2A)
-write.table(res_2B, file='/intermediate/2B_matrix',sep=',',row.names=F, col.names=F)
-cmd <- sprintf('python3.6 compute_2B.py /intermediate/2B_matrix %s/2B.txt.gz', args[4])
+write.table(res_2B, file=sprintf('%s/intermediate/2B_matrix',args[5]),sep=',',row.names=F, col.names=F)
+cmd <- sprintf('python3.6 /CliP/compute_2B.py %s/intermediate/2B_matrix %s/2B.txt.gz', args[5], args[4])
 a <- system(cmd,intern=TRUE)
 write.table(res_1B, file=sprintf('%s/1B.txt',args[4]),sep='\t',row.names=F, col.names=F)
 write.table(res_1C, file=sprintf('%s/1C.txt',args[4]),sep='\t',row.names=F, col.names=F)

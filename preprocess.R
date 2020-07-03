@@ -6,6 +6,10 @@
 # Initialized by Kaixian Yu
 # Date: 05/04/2018
 # Email: kaixiany@163.com
+# 
+# Update 07/03/2020
+# Make the drop of SNV more visable, now the script will give a list of SNVs 
+# that were dropped during the process and gave out a reason
 #------------------------------------------------------------#
 # The script takes commandline arguments: input_SNV input_CNV purity_file Output_dir meta_file
 args = commandArgs(trailingOnly=TRUE)
@@ -72,6 +76,16 @@ LinearApproximate <- function(bv,cv,cn,diag.plot = F){
   
   return(list(w.cut = w.cut[K,],diff= diff[K], coef=coef[K,] ))
 }
+
+CombineReasons <- function(chrom, pos, ind, reason){
+  res <- NULL
+  if(length(ind) > 0){
+    for i in 1:(length(ind)){
+      res[i] <- sprintf("%d\t%d\t%s",chrom[i],pos[i],reason)
+  }
+}
+  return(res)
+}
 ####---------------------------------------------------------------------####
 VALID.CONT     <- 0
 case.store     <- NULL # stores coefs
@@ -79,6 +93,7 @@ cutbeta.store  <- NULL
 cuttheta.store <- NULL
 valid.store    <- NULL # "cn_cv_bv"
 invalid.store  <- NULL
+dropped.SNV    <- NULL
 
 if(file.exists(meta.file)){
         load(meta.file)
@@ -89,6 +104,8 @@ tmp.vcf        <- read.table(snv.file, sep='\t', stringsAsFactors = FALSE)
 mutation.chrom <- as.numeric(tmp.vcf[, 1])
 mutation.pos   <- as.numeric(tmp.vcf[, 2])
 valid.ind      <- which(!is.na(mutation.chrom))
+drop.ind       <- which(is.na(mutation.chrom))
+dropped.SNV    <- CombineReasons(mutation.chrom, mutation.pos, drop.ind, "The SNV is on sex chromosomes.")
 if(length(valid.ind) < VALID.CONT ){
 	stop(sprintf('The sample with SNV %s has less than %d SNVs that are on non-sex chromosomes.',snv.file,VALID.CONT))
 }
@@ -99,6 +116,8 @@ tmp.vcf        <- tmp.vcf[valid.ind,]
 minor.read     <- tmp.vcf[,3]
 total.read     <- tmp.vcf[,3] + tmp.vcf[,4]
 valid.ind      <- intersect(which(minor.read >= 0),which(total.read>=0))
+drop.ind       <- setdiff(1:len(minor.read),valid.ind)
+dropped.SNV    <- append(dropped.SNV,CombineReasons(mutation.chrom, mutation.pos, drop.ind, "The SNV has negative reads."))
 if(length(valid.ind) < VALID.CONT ){
 	stop(sprintf('The sample with SNV %s has less than %d SNVs that have non-negative reads.',snv.file,VALID.CONT))
 }
@@ -128,6 +147,8 @@ mut.cna.id     <- unlist( lapply(1:No.mutations,
                         return(ret.val)
                       } ) )
 valid.ind      <- which(mut.cna.id > 0)
+drop.ind       <- setdiff(1:len(minor.read),valid.ind)
+dropped.SNV    <- append(dropped.SNV,CombineReasons(mutation.chrom, mutation.pos, drop.ind, "The SNV does not have valid copy number."))
 if(length(valid.ind) < VALID.CONT ){
 	stop(sprintf('The sample with SNV %s has less than %d SNVs that have valid copy number status.',snv.file,VALID.CONT))
 }
@@ -152,7 +173,9 @@ multiplicity   <- round(minor.read/total.read/purity*(total.count*purity+(1-puri
 # multiplicity should not exceed larger copy number of the two allels
 minor.count    <- apply(cbind(minor.copy.lim, multiplicity), 1, min)
 minor.count[minor.count == 0] <- 1
-valid.ind <- intersect(which(minor.count>0),which(total.count>0))
+valid.ind      <- intersect(which(minor.count>0),which(total.count>0))
+drop.ind       <- setdiff(1:len(minor.read),valid.ind)
+dropped.SNV    <- append(dropped.SNV,CombineReasons(mutation.chrom, mutation.pos, drop.ind, "The SNV has negative multiplicities."))
 if(length(valid.ind) < VALID.CONT ){
 	stop(sprintf('The sample with SNV %s has less than %d SNVs that have valid copy number status for SNVs.',snv.file,VALID.CONT))
 }
@@ -191,6 +214,8 @@ for(mutation in 1:No.mutations){
 	}
 }
 valid.ind <- which(sample.diff <= 0.1)
+drop.ind       <- setdiff(1:len(minor.read),valid.ind)
+dropped.SNV    <- append(dropped.SNV,CombineReasons(mutation.chrom, mutation.pos, drop.ind, "The copy numbers for the SNV is not stable enough to calculate the approximated line."))
 if(length(valid.ind) < VALID.CONT ){
 	stop(sprintf('The sample with SNV %s has less than %d SNVs that have valid approximated theta.',snv.file,VALID.CONT))
 }
@@ -217,7 +242,8 @@ png(file=sprintf("%s/phi.png", output.prefix))
 hist(phi[valid.ind])
 dev.off()
 
-
+drop.ind       <- setdiff(1:len(minor.read),valid.ind)
+dropped.SNV    <- append(dropped.SNV,CombineReasons(mutation.chrom, mutation.pos, drop.ind, "The empirical CP is off the chart, which may be caused by incorrect copy number or existence of super cluster(s)"))
 if(length(valid.ind) < VALID.CONT ){
 	stop(sprintf('The sample with SNV %s has less than %d SNVs that have valid empirical phi.',snv.file,VALID.CONT))
 }
@@ -241,7 +267,7 @@ output.index   <- sprintf("%s/multiplicity.txt",output.prefix)
 output.pp      <- sprintf("%s/purity_ploidy.txt",output.prefix)
 output.coef    <- sprintf("%s/coef.txt",output.prefix)
 output.cutbeta <- sprintf("%s/cutbeta.txt",output.prefix)
-
+output.dropped <- sprintf("%s/excluded_SNVs.txt",output.prefix)
 write.table(minor.read, output.r,  quote=F, col.names = F, row.names = F)
 write.table(total.read, output.n,  quote=F, col.names = F, row.names = F)
 write.table(minor.count, output.minor,  quote=F, col.names = F, row.names = F)
@@ -250,6 +276,7 @@ write.table(index, output.index,  quote=F, col.names = F, row.names = F)
 write.table(purity, output.pp,  quote=F, col.names = F, row.names = F)
 write.table(sample.coef, output.coef,  quote=F, col.names = F, row.names = F, sep="\t")
 write.table(sample.cutbeta, output.cutbeta,  quote=F, col.names = F, row.names = F)
+write.table(dropped.SNV, output.dropped,  quote=F, col.names = F, row.names = F)
 save(case.store, cutbeta.store, cuttheta.store, valid.store, invalid.store, file = meta.file)
 
 

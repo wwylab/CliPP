@@ -33,7 +33,8 @@ if(!dir.exists(output.prefix)){
 # some utility functions used to conduct the linear approximation
 
 theta = function(w,bv,cv,cn){
-  return((exp(w)*bv)/(cn+exp(w)*cv))
+  #return((exp(w)*bv)/(cn+exp(w)*cv))
+  return((exp(w)*bv)/( (1+exp(w))*cn*(1-purity) + (1+exp(w))*cv*purity) )
 }
 LinearEvaluate <- function(x,a,b){
   return(a*x+b)

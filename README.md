@@ -9,6 +9,10 @@ Need R(>3.3.1) and python(>3.5.1), the script does not support python2.
 
 ## Installing
 There is no need to install CliP.
+
+## Input data sample
+Under /sample/. Those are simulated input for CliP.
+
 ## Input data format
 CliP need 3 input files (please see sample for a more visualized example of input data):
 

@@ -53,10 +53,10 @@ The sampling is done for each interval of cellular prevalence, the sampled SNV i
 
 In the example we have, you may run
 ```
-python3 run_CliP_subsampling.py Sample_data/intermediate/ Sample_data/Results_sub/ CliP.py 0.2 200 10 0.05 0
+python3 run_CliP_subsampling.py Sample_data/intermediate/ Sample_data/Results_sub/ CliP.py 0.2 200 5 0.05 0
 
 ```
-to create 10 subsamples.
+to create 5 subsamples.
 ### Postprocess
 If you run CliP directly, typically you do not need to run postprocess. When the average read depth is low (e.g. ~30X) you may want to run the postprocess with filtering switched on, which in this serves as a denoise step. If you ran CliP with downsampling, you have to run the postprocess script to obtain the final results. You can run post process as
 ```

@@ -12,9 +12,9 @@ There is no need to install CliP.
 ## Input data format
 CliP need 3 input files (please see sample for a more visualized example of input data):
 
-1. SNV file: a tab separated file containing 4 columns, the first column denotes the chromosome, the second one is the position of the SNV, the third column records alt read, and the last column denotes the ref read.
+1. SNV file: a tab separated file containing 8 columns. Specifically, it needs to include chromosome information, the position of the SNV, alt read, and ref read information. Please see the sample input for the detailed format.
 
-2. CNV file: a tab separated file containing 5 or 4 columns, the first column denotes the chromosome, the second one is the start position of the CNV segment, the third column records the end position of the CNV segment. For the actual copy number of each segment, CliP accepts both total-only or allele specific copy number.
+2. CNV file: a tab separated file containing 6 columns. The first column denotes the chromosome, the second one is the start position of the CNV segment, the third column records the end position of the CNV segment. The last three columns takes the actual copy number of each segment, which are major & minor allele total and total copy number.
 
 3. Purity file: A file containing the purity either an estimation from CNA or a guess that will be corrected hopefully by CliP. For details on purity issue, please check our manuscript. 
 

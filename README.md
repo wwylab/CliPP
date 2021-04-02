@@ -12,11 +12,16 @@ There is no need to install CliP.
 ## Input data format
 CliP need 3 input files (please see sample for a more visualized example of input data):
 
-1. SNV file: a tab separated file containing 8 columns. Specifically, it needs to include chromosome information, the position of the SNV, alt read, and ref read information. Please see the sample input for the detailed format.
+1. SNV file: a tab separated file containing 8 columns. Specifically, it needs to include chromosome information, the position of the SNV, alt read, and ref read information. Please see the sample input for the detailed format. 
 
-2. CNV file: a tab separated file containing 6 columns. The first column denotes the chromosome, the second one is the start position of the CNV segment, the third column records the end position of the CNV segment. The last three columns takes the actual copy number of each segment, which are major & minor allele total and total copy number.
+2. CNA file: a tab separated file containing 6 columns. The first column denotes the chromosome, the second one is the start position of the CNV segment, the third column records the end position of the CNV segment. The last three columns takes the actual copy number of each segment, which are major & minor allele total and total copy number.
 
 3. Purity file: A file containing the purity either an estimation from CNA or a guess that will be corrected hopefully by CliP. For details on purity issue, please check our manuscript. 
+
+Input files from the same sample need to be saved in the same directory with the same prefix. Specifically, they need to be named as
+```
+prefix.vcf prefix.cna.txt prefix.purity
+```
 
 ## Start Your First Example
 
@@ -40,7 +45,7 @@ where, path_to_input is the path to the directory stores the preprocessed result
 
 In our data, you can now run
 ```
-python3 run_CliP.py intermediate/sample_ Results_nosub/ CliP.py 0.2
+python3 run_CliP.py path/to/intermediate/sample_ path/to/Results_nosub/ CliP.py 0.2
 ```
 
 CliP is limited by memory (a good estimates, if you do not have enough memory to process all SNVs, we do supply a downsampling strategy, one may run 
@@ -53,7 +58,7 @@ The sampling is done for each interval of cellular prevalence, the sampled SNV i
 
 In the example we have, you may run
 ```
-python3 run_CliP_subsampling.py Sample_data/intermediate/ Sample_data/Results_sub/ CliP.py 0.2 200 5 0.05 0
+python3 run_CliP_subsampling.py path/to/intermediate/ path/to/Results_sub/ CliP.py 0.2 200 5 0.05 0
 
 ```
 to create 5 subsamples.
@@ -67,11 +72,11 @@ filtering_flag taking values 0 and 1， meaning no filtering and filtering, resp
 
 In our non-downsampled run, you can run the following:
 ```
-Rscript post_analysis_run.R Sample_data/Results_nosub/ Sample_data/intermediate/ Sample_data/Final_res/ 0.2 1
+Rscript post_analysis_run.R path/to/Results_nosub/ path/to/intermediate/ path/to/Final_res/ 0.2 1
 ```
 and the downsampled version:
 ```
-Rscript post_analysis_run.R Sample_data/Results_sub/ Sample_data/intermediate/ Sample_data/Final_res/ 0.2 1
+Rscript post_analysis_run.R path/to/Results_sub/ path/to/intermediate/ path/to/Final_res/ 0.2 1
 ```
 ***IMPORTANT if you put both downsampled and non-downsampled results in the same directory, the non-downsampled is always picked! ***
 

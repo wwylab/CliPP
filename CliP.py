@@ -1,8 +1,8 @@
 '''
 CliP the python version, tested with 3.3.1 and 3.4.5, should work with all 3.X and 2.7.6+, but not tested
-Author: Kaixian Yu
-email: kyu2@mdanderson.org
-1/23/2017
+Author: Kaixian Yu, Yujie Jiang
+email: yujiejiang679@gmail.com
+04/02/2021
 '''
 
 import numpy as np

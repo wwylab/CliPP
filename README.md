@@ -28,7 +28,7 @@ Rscript preprocess.R input_SNV input_CNV purity_file Input_prefix Output_dir
 
 In the example we have you may run
 ```
-Rscript preprocess.R path/to/sample.vcf path/to/sample_cna.txt path/to/sample.purity path/to/Output_dir
+Rscript preprocess.R path/to/sample/sample.vcf path/to/sample/sample.cna.txt path/to/sample/sample.purity path/to/Output_dir
 ```
 
 ### Running CliP

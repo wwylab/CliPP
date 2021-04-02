@@ -3,9 +3,9 @@
 # the postprocessing mostly taking care of the hamonization of the results for both downsampled/non-downsampled
 # and make some further filtering which may not be necessary and you can turn them off by setting filtering to 0.
 # Typically you do not need to do the filtering, but when the average coverage is low, say 30-40X, you may want to do this extra filtering.
-# Initialized by Kaixian Yu
-# Date: 05/04/2018
-# Email: kaixiany@163.com
+# Authors: Kaixian Yu, Yujie Jiang
+# Date: 04/02/2021
+# Email: yujiejiang679@gmail.com
 #------------------------------------------------------------# 
 # The script takes commandline arguments: CliP_results_dir preprocessed_output_dir Output_dir lambda filtering_flag
 # The results folder should contain results for only one sample and the non-downsampled version is always given higher priority. 

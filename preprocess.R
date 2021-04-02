@@ -2,11 +2,8 @@
 args = commandArgs(trailingOnly=TRUE)
 # debug use
 snv.file      <- args[1]
-# snv.file <- "/Users/sji/Documents/PostDocWork/CLIP/TCGA_CliP/TEST1/TCGA-13-0921/hello_sample.vcf"
-# cn.file <- "/Users/sji/Documents/PostDocWork/CLIP/TCGA_CliP/TEST1/TCGA-13-0921/sample.cna.txt"
 cn.file       <- args[2]
 purity.file   <- args[3]
-# purity.file   <- "/Users/sji/Documents/PostDocWork/CLIP/TCGA_CliP/TEST1/TCGA-13-0921/sample.purity"
 sample.id     <- args[4]
 # sample.id     <-  "sample"
 output.prefix <- args[5]
@@ -29,7 +26,7 @@ if(!file.exists(purity.file)){
     stop(sprintf('The Input Purity file: %s Does not exist.', purity.file))
 }
 
-setwd(dirname(snv.file))
+# setwd(dirname(snv.file))
 
 # if the output directory does not exist, then try to create the full path
 if(!dir.exists(output.prefix)){

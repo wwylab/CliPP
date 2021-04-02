@@ -28,7 +28,7 @@ Rscript preprocess.R input_SNV input_CNV purity_file Input_prefix Output_dir
 
 In the example you may run
 ```
-Rscript preprocess.R path/to/sample/sample.vcf path/to/sample/sample.cna.txt path/to/sample/sample.purity sample path/to/Output_dir
+Rscript preprocess.R path/to/sample/sample.vcf path/to/sample/sample.cna.txt path/to/sample/sample.purity sample path/to/intermediate
 ```
 
 ### Running CliP
@@ -40,7 +40,7 @@ where, path_to_input is the path to the directory stores the preprocessed result
 
 In our data, you can now run
 ```
-python3 run_CliP.py Output_dir/sample_ Results_nosub/ CliP.py 0.2
+python3 run_CliP.py intermediate/sample_ Results_nosub/ CliP.py 0.2
 ```
 
 CliP is limited by memory (a good estimates, if you do not have enough memory to process all SNVs, we do supply a downsampling strategy, one may run 

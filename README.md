@@ -10,7 +10,7 @@ Need R(>3.3.1) and python(>3.5.1), the script does not support python2.
 ## Installing
 There is no need to install CliP.
 ## Input data format
-CliP need 3 input files (please see Sample data for a more visualized example of input data):
+CliP need 3 input files (please see sample for a more visualized example of input data):
 
 1. SNV file: a tab separated file containing 4 columns, the first column denotes the chromosome, the second one is the position of the SNV, the third column records alt read, and the last column denotes the ref read.
 

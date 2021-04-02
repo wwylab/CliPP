@@ -2,9 +2,9 @@
 This script takes care of the running of CliP
 Usually you will need to run CliP on HPC; 
 the preprocess script makes the input anonymous, so that you can up load them to HPC
-Initialized by Kaixian Yu
-Date: 05/04/2018
-Email: kaixiany@163.com
+Authors: Kaixian Yu, Yujie Jiang
+Date: 04/02/2021
+Email: yujiejiang679@gmail.com
 ----------------------------------------------------------------------
 This script takes the following argument: path_to_input path_to_output path_to_clip lam
 -----------------------------------------------------------------------

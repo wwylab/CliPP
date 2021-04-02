@@ -23,42 +23,40 @@ CliP need 3 input files (please see Sample data for a more visualized example of
 ### Preprocess 
 We supply a preprocess script preprocess.R to prepare the actual input files for CliP.
 ```
-Rscript preprocess.R input_SNV input_CNV purity_file Output_dir meta_file
+Rscript preprocess.R input_SNV input_CNV purity_file Input_prefix Output_dir
 ```
-The meta file should end with '.Rdata'
 
 In the example we have you may run
 ```
-Rscript preprocess.R Sample_data/sample_vcf.txt Sample_data/sample_cnv1.txt Sample_data/sample_purity.txt Sample_data/intermediate/meta.Rdata
+Rscript preprocess.R path/to/sample.vcf path/to/sample_cna.txt path/to/sample.purity path/to/Output_dir
 ```
 
 ### Running CliP
 After the preprocess was done, you can run CliP as:
 ```
-python3 run_CliP.py path_to_input path_to_output path_to_clip lam
+python3 run_CliP.py path_to_input_with_prefix path_to_output path_to_CliP lam
 ```
-where, path_to_input is the path to the directory stores the preprocessed results, path_to_output denotes the directory where the CliP reaults should be put, path_to_clip is the path to CliP.py script, and lam is still the lambda controls the penalization level, and usually takes values from 0.1-1.5.
+where, path_to_input is the path to the directory stores the preprocessed results, path_to_output denotes the directory where the CliP reaults should be put, path_to_clip is the path to CliP.py script, and lam is still the lambda controls the penalization level, and usually takes values from 0.01-0.25.
 
 In our data, you can now run
 ```
-python3 run_CliP.py Sample_data/intermediate/meta.Rdata/ Sample_data/Results_nosub/ CliP.py 0.2
+python3 run_CliP.py Output_dir/sample_ Results_nosub/ CliP.py 0.2
 ```
 
-CliP is limited by memory (a good estimates , if you do not have enough memory to process all SNVs, we do supply a downsampling strategy, one may run 
+CliP is limited by memory (a good estimates, if you do not have enough memory to process all SNVs, we do supply a downsampling strategy, one may run 
 ```
-python3 run_CliP_subsampling.py path_to_input path_to_output path_to_clip lam No_subsampling Rep_id window_size overlap_size
+python3 run_CliP_subsampling.py path_to_input path_to_output path_to_clip lam No_subsampling Rep_num window_size overlap_size
 ```
-where, path_to_input is the path to the directory stores the preprocessed results, path_to_output denotes the directory where the CliP reaults should be put, path_to_clip is the path to CliP.py script, and lam is still the lambda controls the penalization level, No_subsampling quantifies the number of SNVs you want to include, Rep_id serves as a random seed, and typically we do 5-10 runs if a down sampling is needed. 
+where, path_to_input is the path to the directory stores the preprocessed results, path_to_output denotes the directory where the CliP reaults should be put, path_to_clip is the path to CliP.py script, and lam is still the lambda controls the penalization level, No_subsampling quantifies the number of SNVs you want to include, Rep_num serves as a set of n random seeds.
 
 The sampling is done for each interval of cellular prevalence, the sampled SNV is proportional to number of total SNVs belong to each interval. The window_size argument controls the length of the interval, overlap_size controls how large two consecutive windows overlaps. 
 
 In the example we have, you may run
 ```
-python3 run_CliP_subsampling.py Sample_data/intermediate/ Sample_data/Results_sub/ CliP.py 0.2 150 1 0.05 0
-python3 run_CliP_subsampling.py Sample_data/intermediate/ Sample_data/Results_sub/ CliP.py 0.2 150 2 0.05 0
-python3 run_CliP_subsampling.py Sample_data/intermediate/ Sample_data/Results_sub/ CliP.py 0.2 150 3 0.05 0
+python3 run_CliP_subsampling.py Sample_data/intermediate/ Sample_data/Results_sub/ CliP.py 0.2 200 10 0.05 0
+
 ```
-to create 3 subsamples.
+to create 10 subsamples.
 ### Postprocess
 If you run CliP directly, typically you do not need to run postprocess. When the average read depth is low (e.g. ~30X) you may want to run the postprocess with filtering switched on, which in this serves as a denoise step. If you ran CliP with downsampling, you have to run the postprocess script to obtain the final results. You can run post process as
 ```

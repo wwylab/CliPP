@@ -26,9 +26,9 @@ We supply a preprocess script preprocess.R to prepare the actual input files for
 Rscript preprocess.R input_SNV input_CNV purity_file Input_prefix Output_dir
 ```
 
-In the example we have you may run
+In the example you may run
 ```
-Rscript preprocess.R path/to/sample/sample.vcf path/to/sample/sample.cna.txt path/to/sample/sample.purity path/to/Output_dir
+Rscript preprocess.R path/to/sample/sample.vcf path/to/sample/sample.cna.txt path/to/sample/sample.purity sample path/to/Output_dir
 ```
 
 ### Running CliP

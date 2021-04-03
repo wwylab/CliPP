@@ -21,13 +21,13 @@ prefix        = sys.argv[1]
 if not os.path.exists(sys.argv[2]):
     os.makedirs(sys.argv[2])
 Lambda        = float(sys.argv[4])
-r             = genfromtxt(prefix+"r.txt", delimiter="\t")
-n             = genfromtxt(prefix+"n.txt", delimiter="\t")
-minor         = genfromtxt(prefix+"minor.txt", delimiter="\t")
-total         = genfromtxt(prefix+"total.txt", delimiter="\t")
-purity        = genfromtxt(prefix+"purity_ploidy.txt", delimiter="\t")
-coef          = genfromtxt(prefix+"coef.txt", delimiter="\t")
-phicut        = genfromtxt(prefix+"cutbeta.txt", delimiter=" ")
+r             = genfromtxt(prefix+"_r.txt", delimiter="\t")
+n             = genfromtxt(prefix+"_n.txt", delimiter="\t")
+minor         = genfromtxt(prefix+"_minor.txt", delimiter="\t")
+total         = genfromtxt(prefix+"_total.txt", delimiter="\t")
+purity        = genfromtxt(prefix+"_purity_ploidy.txt", delimiter="\t")
+coef          = genfromtxt(prefix+"_coef.txt", delimiter="\t")
+phicut        = genfromtxt(prefix+"_cutbeta.txt", delimiter=" ")
 No_mutation   = len(r);
 ploidy        = 2
 alpha         = 0.8;

@@ -62,7 +62,7 @@ The sampling is done for each interval of cellular prevalence, the sampled SNV i
 
 In the example we have, you may run
 ```
-python3 run_CliP_subsampling.py path/to/intermediate/ path/to/Results_sub/ CliP.py 0.2 200 5 0.05 0
+python3 run_CliP_subsampling.py path/to/intermediate/sample_ path/to/Results_sub/ CliP.py 0.2 200 5 0.05 0
 
 ```
 to create 5 subsamples.

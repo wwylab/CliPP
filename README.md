@@ -43,26 +43,26 @@ Rscript preprocess.R path/to/sample/sample.vcf path/to/sample/sample.cna.txt pat
 ### Running CliP
 After the preprocess was done, you can run CliP as:
 ```
-python3 run_CliP.py path_to_input_with_prefix path_to_output path_to_CliP lam
+python run_CliP.py path_to_input_with_prefix path_to_output path_to_CliP lam
 ```
-where, path_to_input is the path to the directory stores the preprocessed results, path_to_output denotes the directory where the CliP reaults should be put, path_to_clip is the path to CliP.py script, and lam is still the lambda controls the penalization level, and usually takes values from 0.01-0.25.
+where, path_to_input_with_prefix is the path to the directory stores the preprocessed results, along with whatever the prefix we chose above; path_to_output denotes the directory where the CliP reaults should be put; path_to_clip is the path to CliP.py script; lam is still the lambda controls the penalization level, and usually takes values from 0.01-0.25.
 
 In our data, you can now run
 ```
-python3 run_CliP.py path/to/intermediate/sample_ path/to/Results_nosub/ CliP.py 0.2
+python run_CliP.py path/to/intermediate/sample path/to/Results_nosub/ CliP.py 0.2
 ```
 
 CliP is limited by memory (a good estimates, if you do not have enough memory to process all SNVs, we do supply a downsampling strategy, one may run 
 ```
-python3 run_CliP_subsampling.py path_to_input path_to_output path_to_clip lam No_subsampling Rep_num window_size overlap_size
+python run_CliP_subsampling.py path_to_input_with_prefix path_to_output path_to_clip lam No_subsampling Rep_num window_size overlap_size
 ```
-where, path_to_input is the path to the directory stores the preprocessed results, path_to_output denotes the directory where the CliP reaults should be put, path_to_clip is the path to CliP.py script, and lam is still the lambda controls the penalization level, No_subsampling quantifies the number of SNVs you want to include, Rep_num serves as a set of n random seeds.
+where, path_to_input_with_prefix is the path to the directory stores the preprocessed results, along with whatever the prefix we chose above; path_to_output denotes the directory where the CliP reaults should be put; path_to_clip is the path to CliP.py script; and lam is still the lambda controls the penalization level; No_subsampling quantifies the number of SNVs you want to include; Rep_num indicates the number of random subsamples needed.
 
 The sampling is done for each interval of cellular prevalence, the sampled SNV is proportional to number of total SNVs belong to each interval. The window_size argument controls the length of the interval, overlap_size controls how large two consecutive windows overlaps. 
 
 In the example we have, you may run
 ```
-python3 run_CliP_subsampling.py path/to/intermediate/sample_ path/to/Results_sub/ CliP.py 0.2 200 5 0.05 0
+python run_CliP_subsampling.py path/to/intermediate/sample path/to/Results_sub/ CliP.py 0.2 200 5 0.05 0
 
 ```
 to create 5 subsamples.

@@ -66,21 +66,22 @@ python run_CliP_subsampling.py path/to/intermediate/sample path/to/Results_sub/ 
 
 ```
 to create 5 subsamples.
+
 ### Postprocess
 If you run CliP directly, typically you do not need to run postprocess. When the average read depth is low (e.g. ~30X) you may want to run the postprocess with filtering switched on, which in this serves as a denoise step. If you ran CliP with downsampling, you have to run the postprocess script to obtain the final results. You can run post process as
 ```
-Rscript post_analysis_run.R CliP_results_dir preprocessed_output_dir Output_dir lambda filtering_flag
+Rscript post_analysis_run.R CliP_results_dir preprocessed_output_dir_with_prefix Output_dir lambda filtering_flag
 ```
-Here CliP_results_dir is the directory stores the direct output from CliP, preprocessed_output_dir is the directory stores the preprocessed data, Output_dir records the directory of final output, lambda sepecifies which run you want to postprocess, and 
-filtering_flag taking values 0 and 1， meaning no filtering and filtering, respectively. 
+Here CliP_results_dir is the directory stores the direct output from CliP; preprocessed_output_dir_with_prefix is the directory stores the preprocessed data, along with whatever the prefix we chose above; Output_dir records the directory of final output; lambda sepecifies which run you want to postprocess; 
+filtering_flag taking values 0 and 1，meaning no filtering and filtering, respectively. 
 
 In our non-downsampled run, you can run the following:
 ```
-Rscript post_analysis_run.R path/to/Results_nosub/ path/to/intermediate/ path/to/Final_res/ 0.2 1
+Rscript post_analysis_run.R path/to/Results_nosub/ path/to/intermediate/sample path/to/Final_res/ 0.2 1
 ```
 and the downsampled version:
 ```
-Rscript post_analysis_run.R path/to/Results_sub/ path/to/intermediate/ path/to/Final_res/ 0.2 1
+Rscript post_analysis_run.R path/to/Results_sub/ path/to/intermediate/sample path/to/Final_res/ 0.2 1
 ```
 ***IMPORTANT if you put both downsampled and non-downsampled results in the same directory, the non-downsampled is always picked! ***
 

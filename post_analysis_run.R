@@ -4,7 +4,7 @@
 # and make some further filtering which may not be necessary and you can turn them off by setting filtering to 0.
 # Typically you do not need to do the filtering, but when the average coverage is low, say 30-40X, you may want to do this extra filtering.
 # Authors: Kaixian Yu, Yujie Jiang
-# Date: 04/02/2021
+# Last updated: 04/02/2021
 # Email: yujiejiang679@gmail.com
 #------------------------------------------------------------# 
 # The script takes commandline arguments: CliP_results_dir preprocessed_output_dir Output_dir lambda filtering_flag
@@ -32,10 +32,10 @@ outfile3 <- sprintf("lam%s_rep", lam)
 ifsubsample <- list.files(input.prefix,pattern = outfile3,full.names=T)
 if( file.exists(outfile1) || file.exists(outfile2) ){
 	if(!file.exists(outfile1)){
-		r <- unlist(read.table(sprintf("%s/r.txt", preprocessed.prefix), header=F))
-		n <- unlist(read.table(sprintf("%s/n.txt", preprocessed.prefix), header=F))
-		minor <- unlist(read.table(sprintf("%s/minor.txt",  preprocessed.prefix), header=F))
-		total <- unlist(read.table(sprintf("%s/total.txt",  preprocessed.prefix), header=F))
+		r <- unlist(read.table(sprintf("%s_r.txt", preprocessed.prefix), header=F))
+		n <- unlist(read.table(sprintf("%s_n.txt", preprocessed.prefix), header=F))
+		minor <- unlist(read.table(sprintf("%s_minor.txt",  preprocessed.prefix), header=F))
+		total <- unlist(read.table(sprintf("%s_total.txt",  preprocessed.prefix), header=F))
 		theta.hat <- r / n
 		phi.hat <- ( 2) / ( minor / theta.hat - total + 2 )
 		label <- unlist(read.table(outfile2,header=F))
@@ -116,10 +116,10 @@ if( file.exists(outfile1) || file.exists(outfile2) ){
 	}
 	}
 	consensus.phi         <- unlist(consensus.ccf[[1]]$center)
-	r <- unlist(read.table(sprintf("%s/r.txt", preprocessed.prefix), header=F))
-	n <- unlist(read.table(sprintf("%s/n.txt", preprocessed.prefix), header=F))
-	minor <- unlist(read.table(sprintf("%s/minor.txt",  preprocessed.prefix), header=F))
-	total <- unlist(read.table(sprintf("%s/total.txt",  preprocessed.prefix), header=F))
+	r <- unlist(read.table(sprintf("%s_r.txt", preprocessed.prefix), header=F))
+	n <- unlist(read.table(sprintf("%s_n.txt", preprocessed.prefix), header=F))
+	minor <- unlist(read.table(sprintf("%s_minor.txt",  preprocessed.prefix), header=F))
+	total <- unlist(read.table(sprintf("%s_total.txt",  preprocessed.prefix), header=F))
 	theta.hat <- r / n
 	phi.hat <- ( 2) / ( minor / theta.hat - total + 2 )
 	No.mutations <- length(r)

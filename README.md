@@ -45,7 +45,7 @@ After the preprocess was done, you can run CliP as:
 ```
 python run_CliP.py path_to_input_with_prefix path_to_output path_to_CliP lam
 ```
-where, path_to_input_with_prefix is the path to the directory stores the preprocessed results, along with whatever the prefix we chose above; path_to_output denotes the directory where the CliP reaults should be put; path_to_clip is the path to CliP.py script; lam is still the lambda controls the penalization level, and usually takes values from 0.01-0.25.
+where, path_to_input_with_prefix is the path to the directory stores the preprocessed results, **along with whatever the prefix chosen above**; path_to_output denotes the directory where the CliP results should be put; path_to_clip is the path to CliP.py script; lam is still the lambda controls the penalization level, and usually takes values from 0.01-0.25.
 
 In our data, you can now run
 ```
@@ -56,7 +56,7 @@ CliP is limited by memory (a good estimates, if you do not have enough memory to
 ```
 python run_CliP_subsampling.py path_to_input_with_prefix path_to_output path_to_clip lam No_subsampling Rep_num window_size overlap_size
 ```
-where, path_to_input_with_prefix is the path to the directory stores the preprocessed results, along with whatever the prefix we chose above; path_to_output denotes the directory where the CliP reaults should be put; path_to_clip is the path to CliP.py script; and lam is still the lambda controls the penalization level; No_subsampling quantifies the number of SNVs you want to include; Rep_num indicates the number of random subsamples needed.
+where, path_to_input_with_prefix is the path to the directory stores the preprocessed results, **along with whatever the prefix chosen above**; path_to_output denotes the directory where the CliP results should be put; path_to_clip is the path to CliP.py script; and lam is still the lambda controls the penalization level; No_subsampling quantifies the number of SNVs you want to include; Rep_num indicates the number of random subsamples needed.
 
 The sampling is done for each interval of cellular prevalence, the sampled SNV is proportional to number of total SNVs belong to each interval. The window_size argument controls the length of the interval, overlap_size controls how large two consecutive windows overlaps. 
 
@@ -72,7 +72,7 @@ If you run CliP directly, typically you do not need to run postprocess. When the
 ```
 Rscript post_analysis_run.R CliP_results_dir preprocessed_output_dir_with_prefix Output_dir lambda filtering_flag
 ```
-Here CliP_results_dir is the directory stores the direct output from CliP; preprocessed_output_dir_with_prefix is the directory stores the preprocessed data, along with whatever the prefix we chose above; Output_dir records the directory of final output; lambda sepecifies which run you want to postprocess; 
+Here CliP_results_dir is the directory stores the direct output from CliP; preprocessed_output_dir_with_prefix is the directory stores the preprocessed data, **along with whatever the prefix chosen above**; Output_dir records the directory of final output; lambda sepecifies which run you want to postprocess; 
 filtering_flag taking values 0 and 1，meaning no filtering and filtering, respectively. 
 
 In our non-downsampled run, you can run the following:

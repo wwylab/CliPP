@@ -83,7 +83,9 @@ and the downsampled version:
 ```
 Rscript post_analysis_run.R path/to/Results_sub/ path/to/intermediate/sample path/to/Final_res/ 0.2 1
 ```
-**IMPORTANT if you put both downsampled and non-downsampled results in the same directory, the non-downsampled is always picked! **
+
+
+**IMPORTANT if you put both downsampled and non-downsampled results in the same directory, the non-downsampled is always picked!**
 
 
 

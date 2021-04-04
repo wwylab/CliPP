@@ -236,10 +236,10 @@ clonal.ind <- which(phi > 1.5)
 if(length(clonal.ind) > 0){
     outlier.higherEnd <- cbind(mutation.chrom[clonal.ind],mutation.pos[clonal.ind],
                                total.count[clonal.ind], minor.count[clonal.ind])
-    write.table(outlier.higherEnd, file=sprintf("./%s/%s_outPosition.txt", output.prefix, sample.id),
+    write.table(outlier.higherEnd, file=sprintf("%s/%s_outPosition.txt", output.prefix, sample.id),
                 quote=F, col.names = F, row.names = F)
 }
-# png(file=sprintf("./%s/%s_phi.png", output.prefix, sample.id))
+# png(file=sprintf("%s/%s_phi.png", output.prefix, sample.id))
 # # print(valid.ind)
 # hist(phi[valid.ind])
 # dev.off()
@@ -262,16 +262,16 @@ No.mutations   <- length(valid.ind)
 
 index          <- cbind(mutation.chrom,mutation.pos,total.count, minor.count)
 # output preprocessed results
-output.r       <- sprintf("./%s/%s_r.txt",output.prefix,sample.id)
-output.n       <- sprintf("./%s/%s_n.txt",output.prefix,sample.id)
-output.minor   <- sprintf("./%s/%s_minor.txt",output.prefix,sample.id)
-output.total   <- sprintf("./%s/%s_total.txt",output.prefix,sample.id)
-output.index   <- sprintf("./%s/%s_multiplicity.txt",output.prefix,sample.id)
-output.pp      <- sprintf("./%s/%s_purity_ploidy.txt",output.prefix,sample.id)
-output.coef    <- sprintf("./%s/%s_coef.txt",output.prefix,sample.id)
-output.cutbeta <- sprintf("./%s/%s_cutbeta.txt",output.prefix,sample.id)
+output.r       <- sprintf("%s/%s_r.txt",output.prefix,sample.id)
+output.n       <- sprintf("%s/%s_n.txt",output.prefix,sample.id)
+output.minor   <- sprintf("%s/%s_minor.txt",output.prefix,sample.id)
+output.total   <- sprintf("%s/%s_total.txt",output.prefix,sample.id)
+output.index   <- sprintf("%s/%s_multiplicity.txt",output.prefix,sample.id)
+output.pp      <- sprintf("%s/%s_purity_ploidy.txt",output.prefix,sample.id)
+output.coef    <- sprintf("%s/%s_coef.txt",output.prefix,sample.id)
+output.cutbeta <- sprintf("%s/%s_cutbeta.txt",output.prefix,sample.id)
 
-output.dropped <- sprintf("./%s/%s_excluded_SNVs.txt",output.prefix,sample.id)
+output.dropped <- sprintf("%s/%s_excluded_SNVs.txt",output.prefix,sample.id)
 write.table(minor.read, output.r,  quote=F, col.names = F, row.names = F)
 write.table(total.read, output.n,  quote=F, col.names = F, row.names = F)
 write.table(minor.count, output.minor,  quote=F, col.names = F, row.names = F)

@@ -2,7 +2,7 @@
 Clonal structure identification through penalizing pairwise differences
 
 ## Introduction
-CliP is a subclonal identification tool designed for next-generation sequecing of bulk tumor samples. It is one of the 11  participating methods in the Pan-Cancer Analysis of Whole Genome (PCAWG) working group, Heterogeneity and Evolution, of International Cancer Genome Consortium (ICGC). And the method is described in this manuscript (Cite CliP paper).
+CliP is a subclonal identification tool designed for next-generation sequecing of bulk tumor samples. It is one of the 11  participating methods in the Pan-Cancer Analysis of Whole Genome (PCAWG) working group, Heterogeneity and Evolution, of International Cancer Genome Consortium (ICGC). And the method is described in this manuscript: https://www.biorxiv.org/content/10.1101/2021.03.31.437383v1.
 
 ## Prerequisitions
 Need R(>3.3.1) and python(>3.5.1), the script does not support python2.
@@ -27,7 +27,7 @@ Input files from the same sample need to be saved in the same directory with the
 prefix.vcf prefix.cna.txt prefix.purity
 ```
 
-## Start Your First Example
+## Example code
 
 ### Preprocess 
 We supply a preprocess script preprocess.R to prepare the actual input files for CliP.

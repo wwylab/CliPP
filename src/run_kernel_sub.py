@@ -22,25 +22,23 @@ import ctypes
 # mkl_rt.mkl_set_num_threads(ctypes.byref(ctypes.c_int(16)))
 
 sys.path.insert(0,sys.argv[3])
-from CliP import *
+from kernel import *
 from numpy import genfromtxt
 prefix = sys.argv[1]
 if not os.path.exists(sys.argv[2]):
     os.makedirs(sys.argv[2])
-Lambda    = float(sys.argv[4])
-No_subsampling = int(sys.argv[5])
-rep = int(sys.argv[6])
-window_size = float(sys.argv[7])
-overlap = float(sys.argv[8])
+No_subsampling = int(sys.argv[4])
+rep = int(sys.argv[5])
+window_size = float(sys.argv[6])
+overlap = float(sys.argv[7])
 #sample_id = sys.argv[9]
-
 
 r_all               = genfromtxt(prefix+"_r.txt", delimiter="\t")
 n_all               = genfromtxt(prefix+"_n.txt", delimiter="\t")
 minor_all           = genfromtxt(prefix+"_minor.txt", delimiter="\t")
 total_all           = genfromtxt(prefix+"_total.txt", delimiter="\t")
 purity              = genfromtxt(prefix+"_purity_ploidy.txt", delimiter="\t")
-coef_all            = genfromtxt(prefix+"_coef.txt", delimiter="\t")
+coef_all            = genfromtxt(prefix+"_coef.txt", delimiter="\t")ï
 phicut_all          = genfromtxt(prefix+"_cutbeta.txt", delimiter=" ")
 No_mutation_all     = len(r_all)
 ploidy              = 2
@@ -67,6 +65,7 @@ SNVcount = [len(index[i]) for i in range(len(index))]
 sampling_proportion = No_subsampling / No_mutation_all
 SNVtoSample = [np.round(SNVcount[i]*sampling_proportion) for i in range(len(SNVcount))]
 
+
 # start = time.time()
 for j in range(1,rep+1):
     np.random.seed(j)
@@ -90,17 +89,36 @@ for j in range(1,rep+1):
     post_th           = 0.05;
     least_diff        = 0.01;
     least_mut         = np.ceil(0.05 * No_mutation);
+    Lambda_list = [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25]
     wcut=phicut
-    res = CliP(r, n, minor, total, ploidy, Lambda*0.01, alpha, rho, gamma, Run_limit, precision,
-             control_large, least_mut, post_th, least_diff, coef, wcut, purity)
-    labl = np.unique(res['label'])
-    summary = np.zeros([len(labl),3])
 
-    for i in range(len(labl)):
+    if len(sys.argv) < 9:
+        for Lambda in Lambda_list:
+            res = CliP(r, n, minor, total, ploidy, Lambda*0.01, alpha, rho, gamma, Run_limit, precision, 
+            control_large, least_mut, post_th, least_diff, coef, wcut, purity)
+            labl = np.unique(res['label'])
+            summary = np.zeros([len(labl),3])
+		
+            for i in range(len(labl)):
+                summary[i,0] = labl[i]
+                summary[i,2] = np.round(np.unique( res['phi'][np.where(res['label']==labl[i] )[0]])[0],3)
+                summary[i,1] = len(np.where(res['label']==labl[i] )[0])
+		
+            np.savetxt('%s/lam%s_rep%s.txt'%(sys.argv[2], str(Lambda),str(j)), summary ,fmt='%d\t%d\t%.3f')
+    
+    else:
+        Lambda    = float(sys.argv[8])
+        res = CliP(r, n, minor, total, ploidy, Lambda*0.01, alpha, rho, gamma, Run_limit, precision, 
+        control_large, least_mut, post_th, least_diff, coef, wcut, purity)
+        labl = np.unique(res['label'])
+        summary = np.zeros([len(labl),3])
+	
+        for i in range(len(labl)):
             summary[i,0] = labl[i]
             summary[i,2] = np.round(np.unique( res['phi'][np.where(res['label']==labl[i] )[0]])[0],3)
-            summary[i,1] = len(np.where(res['label']==labl[i] )[0])	 
-
-    np.savetxt('%s/lam%s_rep%s.txt'%(sys.argv[2], str(Lambda),str(j)), summary ,fmt='%d\t%d\t%.3f')
-end = time.time()
+            summary[i,1] = len(np.where(res['label']==labl[i] )[0])
+	
+        np.savetxt('%s/lam%s_rep%s.txt'%(sys.argv[2], str(Lambda),str(j)), summary ,fmt='%d\t%d\t%.3f')
+    
+# end = time.time()
 # print(" Time elapsed: ", end - start, "seconds")

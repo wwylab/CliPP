@@ -11,36 +11,62 @@ Need R(>3.3.1) and python(>3.5.1), the script does not support python2.
 ## Installing
 There is no need to install CliP.
 
+## Structure of CliP implementation
+The flow chart below shows the CliP implementation. Raw functions and scripts are under ./scr/. 
+![image](https://user-images.githubusercontent.com/14543452/114482762-bf4c1480-9bcc-11eb-8c96-a944611e91d7.png)
+
+CliP is limited by memory. If you do not have enough memory to process all SNVs, we do supply a downsampling strategy to run the kernel function. As a reference, 256 GB memory would be sufficient for samples with 50,000 SNVs in practice
+
+
+We provide a one-step caller (run_CliP_main.py) to implement this pipeline.
+
+
+
 ## Input data sample
-Under /sample/. Those are example input data for CliP.
+There are three input files:
+
+1. ```sample.snv.txt```: A tab separated file which stores a data matrix. 
+* ```chromosome_index```: The chromosomal location of the SNV.
+* ```position```: the position of the each SNV.
+* ```ref_count```: The number of reads covering the locus and containing the reference allele.
+* ```alt_count```: The number of reads covering the locus and containing the alternative allele.
+
+2. ```sample.cna.txt```: A tab separated file which stores a data matrix.
+* ```chromosome_index```: The chromosome location of the CNA.
+* ```start_position```: the start position of the CNA segment.
+* ```end_position```: the end position of the CNA segment.
+* ```major_cn```: The copy number of the major allele in tumor cells. This should be greater than equal to the value in the minor_cn column and greater than 0.
+* ```minor_cn```: The copy number of the minor allele. This must be less than equal the value in the major_cn column.
+* ```total_cn```: The sum of major_cn and minor_cn.
+
+3. ```sample.purity```: A scalar.
+
+A simulated sample dataset is under ./sample/. Those are example input data for CliP.
 
 
-## Example code
+## Example code (one-step implementation)
 
-### Preprocess 
-We supply a preprocess script preprocess.R to prepare the actual input files for CliP.
+The caller function program clip_main.py wraps up the CliP pipeline and ensures users to implement subclonal reconstruction in one-step. A full version of the command is as follows:
+
 ```
-Rscript preprocess.R input_SNV input_CNV purity_file Input_prefix Output_dir
+python run_clip_main.py -s snv -c cn -p purity -i sample_id -e preprocess_result -b If_subsampling -r preliminary_result -f final_result -g filtering_flag -l Lambda -n No_subsampling -m Rep_num -w window_size -o overlap_size
 ```
+Here are the details of the options:
 
-In the example you may run
-```
-Rscript preprocess.R path/to/sample/sample.vcf path/to/sample/sample.cna.txt path/to/sample/sample.purity sample path/to/intermediate
-```
+* ```snv```: A mandatory argument. Root path of the snv input.
+* ```cn```: A mandatory argument. Root path of the cna input.
+* ```purity```: A mandatory argument. Root path of the purity input.
+* ```sample_id```: The name of the sample being processed. Default is ```sample```.
+* ```preprocess_result```: Directory that stores the preprocess results. Default name is ```intermediate/```.
+* ```If_subsampling```: Whether doing subsampling or not. ```Yes``` or ```No```. Default is ```No```.
+* ```preliminary_result```: Directory that stores the output of the kernel function, which is considered as the preliminary results. Default name is ```Result_nosub/``` (no_subsampling).
+* ```final_result```: Directory that stores the final results after postprocessing. Default name is ```Final_res/```.
+* ```filtering_flag```: Whether filtering is needed during the postprocessing. Take value of 0 or 1. Default is 1 (need filtering).
+* ```Lambda```: The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.
 
-### Running CliP
-After the preprocessing, you can run CliP as:
-```
-python run_CliP.py path_to_input_with_prefix path_to_output path_to_CliP lam
-```
-where, path_to_input_with_prefix is the path to the directory stores the preprocessed results, **along with whatever the prefix chosen above**; path_to_output denotes the directory where the CliP results should be put; path_to_clip is the path to CliP.py script; lam is still the lambda controls the penalization level, and usually takes values from 0.01-0.25.
-
-In the example, you can now run
-```
-python run_CliP.py path/to/intermediate/sample path/to/Results_nosub/ CliP.py 0.2
-```
-
-
-
-
+The followings are parameters only needed when doing postprocessing. Note that the subsampling is done for each interval of cellular prevalence, and the sampled SNV is proportional to number of total SNVs belong to each interval.
+* ```No_subsampling```: The number of SNVs you want to include in each subsamples.
+* ```Rep_num```: The number of random subsamples needed.
+* ```window_size```: Controls the length of the interval. Takes value between 0 and 1. 
+* ```overlap_size```: Controls how large two consecutive windows overlaps. Takes value between 0 and 1. 
 

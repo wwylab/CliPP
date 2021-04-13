@@ -100,10 +100,9 @@ dropped.SNV    <- NULL
 pp.table  <- read.table(purity.file)
 purity <- pp.table$V1[1]
 
-tmp.vcf        <- read.table(snv.file, header=F, stringsAsFactors = F)
-tmp.info       <- lapply(tmp.vcf[,"V8"], function(x){ unlist(strsplit(x,"[;=]")) })
-mutation.chrom <- as.numeric(tmp.vcf[,"V1"])
-mutation.pos   <- as.numeric(tmp.vcf[,"V2"])
+tmp.vcf        <- read.table(snv.file, header=T, stringsAsFactors = F)
+mutation.chrom <- as.numeric(tmp.vcf$chromosome_index)
+mutation.pos   <- as.numeric(tmp.vcf$position)
 # take off the sex chromosome
 valid.ind      <- which(!is.na(mutation.chrom))
 drop.ind       <- which(is.na(mutation.chrom))
@@ -114,16 +113,8 @@ if(length(valid.ind) < VALID.CONT ){
 }
 mutation.chrom <- mutation.chrom[valid.ind]
 mutation.pos   <- mutation.pos[valid.ind]
-tmp.info       <- tmp.info[valid.ind]
-minor.read     <- unlist(lapply(tmp.info, function(x){ ind <- which(x=="t_alt_count")
-if(length(ind)==0){return(-1)}else{
-    return(as.numeric(x[ind+1]))} }))
-total.read     <- unlist(lapply(tmp.info, function(x){ ind1 <- which(x=="t_alt_count")
-ind2 <- which(x=="t_ref_count")
-if(length(ind1)*length(ind2) == 0 ){
-    return(-1)} else {
-        return(as.numeric(x[ind1+1])
-               + as.numeric(x[ind2+1]))}}))
+minor.read     <- tmp.vcf$alt_count[valid.ind]
+total.read     <- tmp.vcf$alt_count[valid.ind] + tmp.vcf$ref_count[valid.ind]
 # take only non-negative counts
 valid.ind      <- intersect(which(minor.read >= 0),which(total.read>=0))
 drop.ind       <- setdiff(1:length(minor.read),valid.ind)

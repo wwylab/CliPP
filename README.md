@@ -61,10 +61,10 @@ Here are the details of the options:
 * ```filtering_flag```: Whether filtering is needed during the postprocessing. Take value of 0 or 1. Default is 1 (need filtering).
 * ```Lambda```: The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.
 
-The followings are parameters only needed when doing postprocessing. Note that the subsampling is done for each interval of cellular prevalence, and the sampled SNV is proportional to number of total SNVs belong to each interval.
+The followings are parameters only needed when doing subsampling. Essentialy, we partition the theoretical CP range (0-1) to multiple intervals (windows), then randomly assign SNVs that belong to their corresponding windows, where the number of sampled SNV is proportional to number of total SNVs belong to each window.
 * ```No_subsampling```: The number of SNVs you want to include in each subsamples.
 * ```Rep_num```: The number of random subsamples needed.
-* ```window_size```: Controls the length of the interval. Takes value between 0 and 1. 
-* ```overlap_size```: Controls how large two consecutive windows overlaps. Takes value between 0 and 1. 
+* ```window_size```: Controls the length of the window. Takes value between 0 and 1. 
+* ```overlap_size```: Controls the overlapped length of two consecutive windows. Takes value between 0 and 1. 
 
 

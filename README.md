@@ -17,10 +17,7 @@ The flow chart below shows the CliP implementation. Raw functions and scripts ar
 
 CliP is limited by memory. If you do not have enough memory to process all SNVs, we do supply a downsampling strategy to run the kernel function. As a reference, 256 GB memory would be sufficient for samples with 50,000 SNVs in practice
 
-
 We provide a one-step caller (run_CliP_main.py) to implement this pipeline.
-
-
 
 ## Input data sample
 There are three input files:
@@ -49,7 +46,7 @@ A simulated sample dataset is under ./sample/. Those are example input data for 
 The caller function program clip_main.py wraps up the CliP pipeline and ensures users to implement subclonal reconstruction in one-step. A full version of the command is as follows:
 
 ```
-python run_clip_main.py -s snv -c cn -p purity -i sample_id -e preprocess_result -b If_subsampling -r preliminary_result -f final_result -g filtering_flag -l Lambda -n No_subsampling -m Rep_num -w window_size -o overlap_size
+python run_clip_main.py -s snv -c cn -p purity -i sample_id -e preprocess_result -b -r preliminary_result -f final_result -g filtering_flag -l Lambda -n No_subsampling -m Rep_num -w window_size -o overlap_size
 ```
 Here are the details of the options:
 
@@ -58,15 +55,16 @@ Here are the details of the options:
 * ```purity```: A mandatory argument. Root path of the purity input.
 * ```sample_id```: The name of the sample being processed. Default is ```sample```.
 * ```preprocess_result```: Directory that stores the preprocess results. Default name is ```intermediate/```.
-* ```If_subsampling```: Whether doing subsampling or not. ```Yes``` or ```No```. Default is ```No```.
+* ```If_subsampling```: Whether doing subsampling or not. Default is ```False```, and a flag ```-b``` is needed when you want to do subsampling
 * ```preliminary_result```: Directory that stores the output of the kernel function, which is considered as the preliminary results. Default name is ```Result_nosub/``` (no_subsampling).
 * ```final_result```: Directory that stores the final results after postprocessing. Default name is ```Final_res/```.
 * ```filtering_flag```: Whether filtering is needed during the postprocessing. Take value of 0 or 1. Default is 1 (need filtering).
 * ```Lambda```: The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.
 
-The followings are parameters only needed when doing postprocessing. Note that the subsampling is done for each interval of cellular prevalence, and the sampled SNV is proportional to number of total SNVs belong to each interval.
+The followings are parameters only needed when doing subsampling. Essentialy, we partition the theoretical CP range (0-1) to multiple intervals (windows), then randomly assign SNVs that belong to their corresponding windows, where the number of sampled SNV is proportional to number of total SNVs belong to each window.
 * ```No_subsampling```: The number of SNVs you want to include in each subsamples.
 * ```Rep_num```: The number of random subsamples needed.
-* ```window_size```: Controls the length of the interval. Takes value between 0 and 1. 
-* ```overlap_size```: Controls how large two consecutive windows overlaps. Takes value between 0 and 1. 
+* ```window_size```: Controls the length of the window. Takes value between 0 and 1. Default is ```0.05```.
+* ```overlap_size```: Controls the overlapped length of two consecutive windows. Takes value between 0 and 1. Default is ```0```.
+
 

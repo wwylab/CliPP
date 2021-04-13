@@ -38,7 +38,7 @@ n_all               = genfromtxt(prefix+"_n.txt", delimiter="\t")
 minor_all           = genfromtxt(prefix+"_minor.txt", delimiter="\t")
 total_all           = genfromtxt(prefix+"_total.txt", delimiter="\t")
 purity              = genfromtxt(prefix+"_purity_ploidy.txt", delimiter="\t")
-coef_all            = genfromtxt(prefix+"_coef.txt", delimiter="\t")ï
+coef_all            = genfromtxt(prefix+"_coef.txt", delimiter="\t")
 phicut_all          = genfromtxt(prefix+"_cutbeta.txt", delimiter=" ")
 No_mutation_all     = len(r_all)
 ploidy              = 2

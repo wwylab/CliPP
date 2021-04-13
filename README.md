@@ -61,10 +61,8 @@ Here are the details of the options:
 * ```filtering_flag```: Whether filtering is needed during the postprocessing. Take value of 0 or 1. Default is 1 (need filtering).
 * ```Lambda```: The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.
 
-The followings are parameters only needed when doing subsampling. Essentialy, we partition the theoretical CP range (0-1) to multiple intervals (windows), then randomly assign SNVs that belong to their corresponding windows, where the number of sampled SNV is proportional to number of total SNVs belong to each window.
-* ```No_subsampling```: The number of SNVs you want to include in each subsamples.
-* ```Rep_num```: The number of random subsamples needed.
+The followings are parameters only needed when doing subsampling. We take partitions from 0-1 (determined by users through windows, default at 0.05), then take the VAF of each SNV as an initial estimation of its CP value and randomly assign SNVs that belong to their corresponding windows. The number of sampled SNV is proportional to number of total SNVs belongs to each window. 
+* ```No_subsampling```: Required if doing subsampling. The number of SNVs you want to include in each subsamples.
+* ```Rep_num```: Required if doing subsampling. The number of random subsamples needed.
 * ```window_size```: Controls the length of the window. Takes value between 0 and 1. Default is ```0.05```.
 * ```overlap_size```: Controls the overlapped length of two consecutive windows. Takes value between 0 and 1. Default is ```0```.
-
-

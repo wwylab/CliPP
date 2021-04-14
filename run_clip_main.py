@@ -18,7 +18,6 @@ parser.add_argument("-p", "--preprocess", type=str, default="intermediate/", hel
 parser.add_argument("-b", "--subsampling", action='store_true', help="Whether doing subsampling or not. Default is not doing the subsampling, and a flag -b is needed when you want to do subsampling.")
 parser.add_argument("-r", "--preliminary", type=str, default="preliminary_result/", help="Directory that stores the output of the kernel function, which is considered as the preliminary results. Default name is 'preliminary_result/'.")
 
-<<<<<<< HEAD
 parser.add_argument("-f", "--final", type=str, default="final_result/", help="Directory that stores the final results after postprocessing. Default name is 'final_result/'.")
 parser.add_argument("-nf", "--no_filtering", action='store_false', help="If filtering is not wanted. Default is doing the filtering, and a flag -nf is needed when you don't want to do the filtering.")
 parser.add_argument("-l", "--Lambda", type=float, help="The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.")
@@ -26,23 +25,12 @@ parser.add_argument("-s", "--subsample_size", type=int, help="(Required if doing
 parser.add_argument("-n", "--rep_num", type=int, help="(Required if doing subsampling) The number of random subsamples needed.")
 parser.add_argument("-w", "--window_size", type=float, default=0.05, help="Controls the length of the window. Takes value between 0 and 1. Default is 0.05.")
 parser.add_argument("-o", "--overlap_size", type=float, default=0.0, help="Controls the overlapped length of two consecutive windows. Takes value between 0 and 1. Default is 0.")
-=======
-parser.add_argument("-f", "--final_result", type=str, default="final_result/", help="directory that stores the final results")
-parser.add_argument("-g", "--filtering_flag", type=int, default = 1, help="whether filtering is needed during the postprocessing")
-parser.add_argument("-l", "--Lambda", type=float, help="The penalty parameter")
-parser.add_argument("-n", "--No_subsampling", type=int, help="The number of SNVs you want to include in each subsample.")
-parser.add_argument("-m", "--Rep_num", type=int, help="The number of random subsamples needed.")
-parser.add_argument("-w", "--window_size", type=float, default=0.05, help="controls the length of the interval between each cellular prevalence")
-parser.add_argument("-o", "--overlap_size", type=float, default=0.0, help="controls how large two consecutive windows overlaps")
->>>>>>> 142e174647f1677825fbe9b1849d4aaab8b9468e
 
 
 args_1 = parser.parse_args()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 run_preprocess = current_dir + "/src/preprocess.R"
-
-print(int(args_1.no_filtering))
 
 start = time.time()
 # Run preprocess
@@ -56,7 +44,6 @@ path_to_input_with_prefix = args_1.preprocess + args_1.sample_id
 run_postprocess = current_dir + "/src/postprocess.R"
 run_lambda_selection = current_dir + "/src/penalty_selection.py"
 
-print(args_1.subsampling)
 
 # Run the main CliP function (with subsampling)
 if args_1.subsampling == False:

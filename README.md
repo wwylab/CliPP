@@ -47,7 +47,7 @@ The caller function `run_clip_main.py` wraps up the CliP pipeline and enables us
 python run_clip_main.py sample/sample.snv.txt sample/sample.cna.txt sample/sample.purity.txt
 ````
 
-A full template is as follows:
+A full manual is as follows:
 
 ```
 usage: run_clip_main.py [-h] [-i SAMPLE_ID] [-e PREPROCESS] [-b] [-r PRELIMINARY] [-f FINAL] [-nf]
@@ -55,38 +55,36 @@ usage: run_clip_main.py [-h] [-i SAMPLE_ID] [-e PREPROCESS] [-b] [-r PRELIMINARY
                         snv_input cn_input purity_input
 
 positional arguments:
-  snv_input             Path of the snv input.
-  cn_input              Path of the copy number input.
-  purity_input          Path of the purity input.
+  snv_input             Path/Filename of the snv input.
+  cn_input              Path/Filename of the copy number input.
+  purity_input          Path/Filename of the purity input.
 
 
 optional arguments:
   -h, --help            show this help message and exit
   -i SAMPLE_ID, --sample_id SAMPLE_ID
                         Name of the sample being processed. Default is 'sample_id'.
-  -nf, --no_filtering   If filtering is not wanted. Default is doing the filtering, and a flag -nf is 
-                        needed when you don't want to do the filtering.
   -l LAMBDA, --Lambda LAMBDA
                         The penalty parameter, which usually takes values from 0.01-0.25. If skipping 
                         this parameter, it will return a list of results that take value of [0.01, 
                         0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.
   -b, --subsampling     Whether doing subsampling or not. Default is not doing the subsampling, and a 
-                        flag -b is needed when you want to do subsampling.
+                        flag -b is needed for subsampling.
   -p PREPROCESS, --preprocess PREPROCESS
-                        Directory that stores the preprocess results. Default name is 'preprocess_result/'.
+                        Path/Filename that stores the preprocess results. Default name is 'preprocess_result/'.
   -r PRELIMINARY, --preliminary PRELIMINARY
-                        Directory that stores the output of the kernel function, which is considered 
+                        Path/Filename that stores the output of the kernel function, which is considered 
                         as the preliminary results. Default name is 'preliminary_result/'.
   -f FINAL, --final FINAL
-                        Directory that stores the final results after postprocessing. Default name is 
+                        Path/Filename that stores the final results after postprocessing. Default name is 
                         'final_result/'.
 ```
 
-The followings parameters are only needed when doing subsampling. We take partitions from 0 to 1 (determined by the `WINDOW_SIZE` parameter, default at `0.05`), then take the VAF of each SNV as an initial estimation of its CP value and randomly assign SNVs that belong to their corresponding windows. The number of sampled SNV is proportional to number of total SNVs belonging to each window. 
+The followings parameters are only needed when doing subsampling. We take partitions from 0 to 1 (determined by the `WINDOW_SIZE` parameter, default at `0.05`), then take the VAF of each SNV as an initial estimation of its cellular prevalence (CP) value and randomly assign SNVs that belong to their corresponding windows. The number of sampled SNV is proportional to number of total SNVs belonging to each window. 
 ```
   -s SUBSAMPLE_SIZE, --subsample_size SUBSAMPLE_SIZE
                         (Required if doing subsampling) The number of SNVs you want to include in 
-                        each subsamples.
+                        each subsamples. We use 40,000 for 256GB memory. 
   -n REP_NUM, --rep_num REP_NUM
                         (Required if doing subsampling) The number of random subsamples needed.
   -w WINDOW_SIZE, --window_size WINDOW_SIZE

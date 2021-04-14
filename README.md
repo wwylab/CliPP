@@ -12,21 +12,21 @@ Need R(>3.3.1) and python(>3.5.1), the script does not support python2.
 There is no need to install CliP.
 
 ## Structure of CliP implementation
-The flow chart below shows the CliP implementation. Raw functions and scripts are under ./scr/. 
+The flow chart below shows the CliP implementation. Raw functions and scripts are under `scr/`. 
 ![image](https://user-images.githubusercontent.com/14543452/114482762-bf4c1480-9bcc-11eb-8c96-a944611e91d7.png)
 
-CliP can run on samples with up to 50,000 SNVs on a machine with 256GB memory. It requires more memory when there are more SNVs. When that happens, we apply a downsampling strategy, as implemented in all other subclonal reconstruction methods. 
+CliP can run on samples with up to 50,000 SNVs on a machine with 256GB memory. It may require more memory when there are more SNVs. When that happens, we apply a downsampling strategy, as implemented in all other subclonal reconstruction methods. 
 
 ## Input data sample
-There are three input files:
+There are three required input files:
 
-1. ```sample.snv.txt```: A tab separated file which stores a data matrix. 
+1. ```sample.snv.txt```: A tab separated file which stores a data matrix with the following named columns:
 * ```chromosome_index```: The chromosomal location of the SNV.
 * ```position```: the single-nucleotide position of the SNV on the corresponding chromosome.
 * ```ref_count```: The number of reads covering the locus and containing the reference allele.
 * ```alt_count```: The number of reads covering the locus and containing the alternative allele.
 
-2. ```sample.cna.txt```: A tab separated file which stores a data matrix.
+2. ```sample.cna.txt```: A tab separated file which stores a data matrix with the following named columns:
 * ```chromosome_index```: The chromosome location of the CNA.
 * ```start_position```: the start position of the CNA segment on the corresponding chromosome.
 * ```end_position```: the end position of the CNA segment on the corresponding chromosome.
@@ -34,33 +34,69 @@ There are three input files:
 * ```minor_cn```: The copy number of the minor allele. This must be less than equal the value in the major_cn column.
 * ```total_cn```: The sum of major_cn and minor_cn.
 
-3. ```sample.purity```: A scalar between 0 and 1.
+3. ```purity.txt```: A file storing a scalar purity value between 0 and 1.
 
-A simulated sample input data is under ./sample/. 
+A simulated sample input data is under `sample/`. 
 
 
-## Example code (one-step implementation)
+## Running CliP with one-step implementation
 
-The caller function ``clip_main.py'' wraps up the CliP pipeline and ensures users to implement subclonal reconstruction in one-step. A full version of the command is as follows:
+The caller function `run_clip_main.py` wraps up the CliP pipeline and enables users to implement subclonal reconstruction in one-step. To do so, you may run:
+```
+python run_clip_main.py -s sample/sample.snv.txt -c sample/sample.cna.txt -p sample/purity.txt
+````
+
+A full template is as follows:
 
 ```
-python run_clip_main.py -s snv -c cn -p purity -i sample_id -e preprocess_result -b -r preliminary_result -f final_result -g filtering_flag -l Lambda -n No_subsampling -m Rep_num -w window_size -o overlap_size
+usage: run_clip_main.py [-h] [-i SAMPLE_ID] [-e PREPROCESS] [-b] [-r PRELIMINARY] [-f FINAL] [-nf]
+                        [-l LAMBDA] [-s SUBSAMPLE_SIZE] [-n REP_NUM] [-w WINDOW_SIZE] [-o OVERLAP_SIZE]
+                        snv_input cn_input purity_input
+
+positional arguments:
+  snv_input             Path of the snv input.
+  cn_input              Path of the copy number input.
+  purity_input          Path of the purity input.
+
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i SAMPLE_ID, --sample_id SAMPLE_ID
+                        Name of the sample being processed. Default is 'sample'.
+  -p PREPROCESS, --preprocess PREPROCESS
+                        Directory that stores the preprocess results. Default name is 'intermediate/'.
+  -b, --subsampling     Whether doing subsampling or not. Default is not doing the subsampling, and a 
+                        flag -b is needed when you want to do subsampling.
+  -r PRELIMINARY, --preliminary PRELIMINARY
+                        Directory that stores the output of the kernel function, which is considered 
+                        as the preliminary results. Default name is 'preliminary_result/'.
+  -f FINAL, --final FINAL
+                        Directory that stores the final results after postprocessing. Default name is 
+                        'final_result/'.
+  -nf, --no_filtering   If filtering is not wanted. Default is doing the filtering, and a flag -nf is 
+                        needed when you don't want to do the filtering.
+  -l LAMBDA, --Lambda LAMBDA
+                        The penalty parameter, which usually takes values from 0.01-0.25. If skipping 
+                        this parameter, it will return a list of results that take value of [0.01, 
+                        0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.
 ```
-Here are the details of the options:
 
-* ```snv```: A mandatory argument. Root path of the snv input.
-* ```cn```: A mandatory argument. Root path of the cna input.
-* ```purity```: A mandatory argument. Root path of the purity input.
-* ```sample_id```: The name of the sample being processed. Default is ```sample```.
-* ```preprocess_result```: Directory that stores the preprocess results. Default name is ```intermediate/```.
-* ```If_subsampling```: Whether doing subsampling or not. Default is not doing the subsampling, and a flag ```-b``` is needed when you want to do subsampling.
-* ```preliminary_result```: Directory that stores the output of the kernel function, which is considered as the preliminary results. Default name is ```Result_nosub/``` (no_subsampling).
-* ```final_result```: Directory that stores the final results after postprocessing. Default name is ```final_result/```.
-* ```filtering_flag```: Whether filtering is needed during the postprocessing. Take value of 0 or 1. Default is 1 (need filtering).
-* ```Lambda```: The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.
+The followings parameters are only needed when doing subsampling. We take partitions from 0 to 1 (determined by the `WINDOW_SIZE` parameter, default at `0.05`), then take the VAF of each SNV as an initial estimation of its CP value and randomly assign SNVs that belong to their corresponding windows. The number of sampled SNV is proportional to number of total SNVs belonging to each window. 
+```
+  -s SUBSAMPLE_SIZE, --subsample_size SUBSAMPLE_SIZE
+                        (Required if doing subsampling) The number of SNVs you want to include in 
+                        each subsamples.
+  -n REP_NUM, --rep_num REP_NUM
+                        (Required if doing subsampling) The number of random subsamples needed.
+  -w WINDOW_SIZE, --window_size WINDOW_SIZE
+                        Controls the length of the window. Takes value between 0 and 1. Default is 0.05.
+  -o OVERLAP_SIZE, --overlap_size OVERLAP_SIZE
+                        Controls the overlapped length of two consecutive windows. Takes value between 
+                        0 and 1. Default is 0.
+```
 
-The followings are parameters only needed when doing subsampling. We take partitions from 0-1 (determined by users through window sizes, default at 0.05), then take the VAF of each SNV as an initial estimation of its CP value and randomly assign SNVs that belong to their corresponding windows. The number of sampled SNV is proportional to number of total SNVs belongs to each window. 
-* ```No_subsampling```: Required if doing subsampling. The number of SNVs you want to include in each subsamples.
-* ```Rep_num```: Required if doing subsampling. The number of random subsamples needed.
-* ```window_size```: Controls the length of the window. Takes value between 0 and 1. Default is ```0.05```.
-* ```overlap_size```: Controls the overlapped length of two consecutive windows. Takes value between 0 and 1. Default is ```0```.
+
+## The CliP Outputs
+The output for CliP is two-fold:
+* The subclonal structure, i.e., clustering results: cluster number, the total number of SNVs in each cluster, and the estimated CP for each cluster.
+* The mutation assignment, i.e., cluster id for each mutation. This output can then serve as the basis for inference of phylogenetic trees.

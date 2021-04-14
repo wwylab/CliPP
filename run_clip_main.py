@@ -15,7 +15,7 @@ parser.add_argument("-e", "--preprocess_result", type=str, default="intermediate
 parser.add_argument("-b", "--If_subsampling", action='store_true', help="whether doing subsampling or not")
 parser.add_argument("-r", "--preliminary_result", type=str, default="Results_nosub/", help="directory that stores the preliminary results")
 
-parser.add_argument("-f", "--final_result", type=str, default="Final_res/", help="directory that stores the final results")
+parser.add_argument("-f", "--final_result", type=str, default="final_result/", help="directory that stores the final results")
 parser.add_argument("-g", "--filtering_flag", type=int, default = 1, help="whether filtering is needed during the postprocessing")
 parser.add_argument("-l", "--Lambda", type=float, help="The penalty parameter")
 parser.add_argument("-n", "--No_subsampling", type=int, help="The number of SNVs you want to include in each subsample.")

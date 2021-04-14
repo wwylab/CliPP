@@ -15,7 +15,6 @@ parser.add_argument("cn_input", type=str, help="Path of the copy number input.")
 parser.add_argument("purity_input", type=str, help="Path of the purity input.")
 parser.add_argument("-i", "--sample_id", type=str, default="sample_id", help="Name of the sample being processed. Default is 'sample'.")
 parser.add_argument("-b", "--subsampling", action='store_true', help="Whether doing subsampling or not. Default is not doing the subsampling, and a flag -b is needed when you want to do subsampling.")
-parser.add_argument("-nf", "--no_filtering", action='store_false', help="If filtering is not wanted. Default is doing the filtering, and a flag -nf is needed when you don't want to do the filtering.")
 parser.add_argument("-l", "--lam", type=float, help="The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.")
 parser.add_argument("-p", "--preprocess", type=str, default="preprocess_result/", help="Directory that stores the preprocess results. Default name is 'preprocess_result/'.")
 parser.add_argument("-r", "--preliminary", type=str, default="preliminary_result/", help="Directory that stores the output of the kernel function, which is considered as the preliminary results. Default name is 'preliminary_result/'.")
@@ -65,7 +64,7 @@ if args.subsampling == False:
 			sys.exit()
 		
 		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(int(args.no_filtering))], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(1)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		_stdout, _stderr = p_postprocess.communicate()
 		if _stderr:
 			print(_stderr.decode().strip())
@@ -86,7 +85,7 @@ if args.subsampling == False:
 			sys.exit()
 		
 		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(int(args.no_filtering)), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(1), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		_stdout, _stderr = p_postprocess.communicate()
 		if _stderr:
 			print(_stderr.decode().strip())
@@ -111,7 +110,7 @@ else:
 			sys.exit()
 		
 		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(int(args.no_filtering))], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(1)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		_stdout, _stderr = p_postprocess.communicate()
 		if _stderr:
 			print(_stderr.decode().strip())
@@ -132,7 +131,7 @@ else:
 			sys.exit()
 		
 		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(int(args.no_filtering)), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(1), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		_stdout, _stderr = p_postprocess.communicate()
 		if _stderr:
 			print(_stderr.decode().strip())

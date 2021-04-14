@@ -6,7 +6,8 @@ Subpopulations of tumor cells characterized by mutation profiles may confer diff
 
 
 ## Prerequisitions
-Need R(>3.3.1) and python(>3.5.1), the script does not support python2.
+- R [>3.3.1]
+- python [>3.5.1]
 
 ## Installing
 There is no need to install CliP.
@@ -41,9 +42,9 @@ A simulated sample input data is under `sample/`.
 
 ## Running CliP with one-step implementation
 
-The caller function `run_clip_main.py` wraps up the CliP pipeline and enables users to implement subclonal reconstruction in one-step. To do so, you may run:
+The caller function `run_clip_main.py` wraps up the CliP pipeline and enables users to implement subclonal reconstruction in one-step. To try CliP with our sample input, you may run:
 ```
-python run_clip_main.py -s sample/sample.snv.txt -c sample/sample.cna.txt -p sample/purity.txt
+python run_clip_main.py sample/sample.snv.txt sample/sample.cna.txt sample/sample.purity.txt
 ````
 
 A full template is as follows:
@@ -62,23 +63,23 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -i SAMPLE_ID, --sample_id SAMPLE_ID
-                        Name of the sample being processed. Default is 'sample'.
-  -p PREPROCESS, --preprocess PREPROCESS
-                        Directory that stores the preprocess results. Default name is 'intermediate/'.
-  -b, --subsampling     Whether doing subsampling or not. Default is not doing the subsampling, and a 
-                        flag -b is needed when you want to do subsampling.
-  -r PRELIMINARY, --preliminary PRELIMINARY
-                        Directory that stores the output of the kernel function, which is considered 
-                        as the preliminary results. Default name is 'preliminary_result/'.
-  -f FINAL, --final FINAL
-                        Directory that stores the final results after postprocessing. Default name is 
-                        'final_result/'.
+                        Name of the sample being processed. Default is 'sample_id'.
   -nf, --no_filtering   If filtering is not wanted. Default is doing the filtering, and a flag -nf is 
                         needed when you don't want to do the filtering.
   -l LAMBDA, --Lambda LAMBDA
                         The penalty parameter, which usually takes values from 0.01-0.25. If skipping 
                         this parameter, it will return a list of results that take value of [0.01, 
                         0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.
+  -b, --subsampling     Whether doing subsampling or not. Default is not doing the subsampling, and a 
+                        flag -b is needed when you want to do subsampling.
+  -p PREPROCESS, --preprocess PREPROCESS
+                        Directory that stores the preprocess results. Default name is 'preprocess_result/'.
+  -r PRELIMINARY, --preliminary PRELIMINARY
+                        Directory that stores the output of the kernel function, which is considered 
+                        as the preliminary results. Default name is 'preliminary_result/'.
+  -f FINAL, --final FINAL
+                        Directory that stores the final results after postprocessing. Default name is 
+                        'final_result/'.
 ```
 
 The followings parameters are only needed when doing subsampling. We take partitions from 0 to 1 (determined by the `WINDOW_SIZE` parameter, default at `0.05`), then take the VAF of each SNV as an initial estimation of its CP value and randomly assign SNVs that belong to their corresponding windows. The number of sampled SNV is proportional to number of total SNVs belonging to each window. 
@@ -100,3 +101,15 @@ The followings parameters are only needed when doing subsampling. We take partit
 The output for CliP is two-fold:
 * The subclonal structure, i.e., clustering results: cluster number, the total number of SNVs in each cluster, and the estimated CP for each cluster.
 * The mutation assignment, i.e., cluster id for each mutation. This output can then serve as the basis for inference of phylogenetic trees.
+
+## Citation
+If you are using this framework, please cite our paper
+```
+@article{Jiang2021,
+  title={CliP: subclonal architecture reconstruction of cancer cells in DNA sequencing data using a penalized likelihood model},
+  author={Jiang, Yujie and Yu, Kaixian and Ji, Shuangxi and Shin, Seung Jun and Cao, Shaolong and Montierth, Matthew D and Huang, Licai and Kopetz, Scott and Msaouel, Pavlos and Wang, Jennifer Rui and Kimmel, Marek and Zhu, Hongtu and Wang, Wenyi},
+  journal={bioRxiv},
+  year={2021},
+  publisher={Cold Spring Harbor Laboratory}
+}
+```

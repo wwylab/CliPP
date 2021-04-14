@@ -13,92 +13,133 @@ parser = argparse.ArgumentParser()
 parser.add_argument("snv_input", type=str, help="Path of the snv input.")
 parser.add_argument("cn_input", type=str, help="Path of the copy number input.")
 parser.add_argument("purity_input", type=str, help="Path of the purity input.")
-parser.add_argument("-i", "--sample_id", type=str, default="sample", help="Name of the sample being processed. Default is 'sample'.")
-parser.add_argument("-p", "--preprocess", type=str, default="intermediate/", help="Directory that stores the preprocess results. Default name is 'intermediate/'.")
+parser.add_argument("-i", "--sample_id", type=str, default="sample_id", help="Name of the sample being processed. Default is 'sample'.")
 parser.add_argument("-b", "--subsampling", action='store_true', help="Whether doing subsampling or not. Default is not doing the subsampling, and a flag -b is needed when you want to do subsampling.")
-parser.add_argument("-r", "--preliminary", type=str, default="preliminary_result/", help="Directory that stores the output of the kernel function, which is considered as the preliminary results. Default name is 'preliminary_result/'.")
-
-parser.add_argument("-f", "--final", type=str, default="final_result/", help="Directory that stores the final results after postprocessing. Default name is 'final_result/'.")
 parser.add_argument("-nf", "--no_filtering", action='store_false', help="If filtering is not wanted. Default is doing the filtering, and a flag -nf is needed when you don't want to do the filtering.")
-parser.add_argument("-l", "--Lambda", type=float, help="The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.")
+parser.add_argument("-l", "--lam", type=float, help="The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.")
+parser.add_argument("-p", "--preprocess", type=str, default="preprocess_result/", help="Directory that stores the preprocess results. Default name is 'preprocess_result/'.")
+parser.add_argument("-r", "--preliminary", type=str, default="preliminary_result/", help="Directory that stores the output of the kernel function, which is considered as the preliminary results. Default name is 'preliminary_result/'.")
+parser.add_argument("-f", "--final", type=str, default="final_result/", help="Directory that stores the final results after postprocessing. Default name is 'final_result/'.")
+
 parser.add_argument("-s", "--subsample_size", type=int, help="(Required if doing subsampling) The number of SNVs you want to include in each subsamples.")
 parser.add_argument("-n", "--rep_num", type=int, help="(Required if doing subsampling) The number of random subsamples needed.")
 parser.add_argument("-w", "--window_size", type=float, default=0.05, help="Controls the length of the window. Takes value between 0 and 1. Default is 0.05.")
 parser.add_argument("-o", "--overlap_size", type=float, default=0.0, help="Controls the overlapped length of two consecutive windows. Takes value between 0 and 1. Default is 0.")
 
-
-args_1 = parser.parse_args()
+args = parser.parse_args()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-run_preprocess = current_dir + "/src/preprocess.R"
+run_preprocess = os.path.join(current_dir, "src/preprocess.R")
+
+result_dir = os.path.join(current_dir, args.sample_id)
+if not os.path.exists(result_dir):
+	os.makedirs(result_dir)
+
+path_for_preprocess = os.path.join(result_dir, args.preprocess)
+path_for_preliminary = os.path.join(result_dir, args.preliminary)
+path_for_final = os.path.join(result_dir, args.final)
 
 start = time.time()
 # Run preprocess
-p_preprocess = subprocess.Popen(["Rscript", run_preprocess, args_1.snv_input, args_1.cn_input, args_1.purity_input, args_1.sample_id, args_1.preprocess], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-p_preprocess.communicate()
+print("Running preprocessing...")
+p_preprocess = subprocess.Popen(["Rscript", run_preprocess, args.snv_input, args.cn_input, args.purity_input, args.sample_id, path_for_preprocess], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+_stdout, _stderr = p_preprocess.communicate()
+if _stderr:
+	print(_stderr.decode().strip())
+	sys.exit()
+print("Preprocessing finished.")
 
+run_CliP = os.path.join(current_dir, "src/run_kernel_nosub.py")
+python_clip = os.path.join(current_dir, "src/kernel.py")
+run_postprocess = os.path.join(current_dir, "src/postprocess.R")
+run_lambda_selection = os.path.join(current_dir, "src/penalty_selection.py")
 
-run_CliP = current_dir + "/src/run_kernel_nosub.py"
-python_clip = current_dir + "/src/kernel.py"
-path_to_input_with_prefix = args_1.preprocess + args_1.sample_id
-run_postprocess = current_dir + "/src/postprocess.R"
-run_lambda_selection = current_dir + "/src/penalty_selection.py"
-
-
-# Run the main CliP function (with subsampling)
-if args_1.subsampling == False:
-	if args_1.Lambda == None:
-		p_run_CliP = subprocess.Popen(["python", run_CliP, path_to_input_with_prefix, args_1.preliminary, python_clip], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-		p_run_CliP.communicate()
+# Run the main CliP function (without subsampling)
+print("Running the main CliP function...")
+if args.subsampling == False:
+	if args.lam == None:
+		p_run_CliP = subprocess.Popen(["python", run_CliP, path_for_preprocess, path_for_preliminary, python_clip], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		_stdout, _stderr = p_run_CliP.communicate()
+		if _stderr:
+			print(_stderr.decode().strip())
+			sys.exit()
 		
 		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, args_1.preliminary, path_to_input_with_prefix, args_1.final, str(int(args_1.no_filtering))], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-		p_postprocess.communicate()
+		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(int(args.no_filtering))], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		_stdout, _stderr = p_postprocess.communicate()
+		if _stderr:
+			print(_stderr.decode().strip())
+			sys.exit()
 		
 		# The lambda selection methods:
-		p_lambda_selection = subprocess.Popen(["python", run_lambda_selection, args_1.purity_input, args_1.final], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-		p_lambda_selection.communicate()
+		p_lambda_selection = subprocess.Popen(["python", run_lambda_selection, args.purity_input, path_for_final], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		_stdout, _stderr = p_lambda_selection.communicate()
+		if _stderr:
+			print(_stderr.decode().strip())
+			sys.exit()
 		
 	else:
-		p_run_CliP = subprocess.Popen(["python", run_CliP, path_to_input_with_prefix, args_1.preliminary, python_clip, str(Lambda)], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-		p_run_CliP.communicate()
+		p_run_CliP = subprocess.Popen(["python", run_CliP, path_for_preprocess, path_for_preliminary, python_clip, str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		_stdout, _stderr = p_run_CliP.communicate()
+		if _stderr:
+			print(_stderr.decode().strip())
+			sys.exit()
 		
 		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, args_1.preliminary, path_to_input_with_prefix, args_1.final, str(int(args_1.no_filtering)), str(args_1.Lambda)], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-		p_postprocess.communicate()
+		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(int(args.no_filtering)), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		_stdout, _stderr = p_postprocess.communicate()
+		if _stderr:
+			print(_stderr.decode().strip())
+			sys.exit()
 
 			
-# Run the main CliP function (without subsampling)
+# Run the main CliP function (with subsampling)
 else:
-	subsampling_clip = current_dir + "/src/run_kernel_sub.py"
-	if args_1.subsample_size == None:
+	subsampling_clip = os.path.join(current_dir, "src/run_kernel_sub.py")
+	if args.subsample_size == None:
 		sys.exit("Need an input for subsample_size")
 		
 	
-	if args_1.rep_num == None:
+	if args.rep_num == None:
 		sys.exit("Need an input for rep_num")
 	
-	if args_1.Lambda == None:
-		p_run_subsampling = subprocess.Popen(["python", subsampling_clip, path_to_input_with_prefix, args_1.preliminary, python_clip, str(args_1.subsample_size), str(args_1.rep_num), str(args_1.window_size), str(args_1.overlap_size)], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-		p_run_subsampling.communicate()
+	if args.lam == None:
+		p_run_subsampling = subprocess.Popen(["python", subsampling_clip, path_for_preprocess, path_for_preliminary, python_clip, str(args.subsample_size), str(args.rep_num), str(args.window_size), str(args.overlap_size)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		_stdout, _stderr = p_run_subsampling.communicate()
+		if _stderr:
+			print(_stderr.decode().strip())
+			sys.exit()
 		
 		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, args_1.preliminary, path_to_input_with_prefix, args_1.final, str(int(args_1.no_filtering))], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-		p_postprocess.communicate()
+		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(int(args.no_filtering))], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		_stdout, _stderr = p_postprocess.communicate()
+		if _stderr:
+			print(_stderr.decode().strip())
+			sys.exit()
 		
 		# The lambda selection methods:
-		p_lambda_selection = subprocess.Popen(["python", run_lambda_selection, args_1.purity_input, args_1.final], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-		p_lambda_selection.communicate()
+		p_lambda_selection = subprocess.Popen(["python", run_lambda_selection, args.purity_input, path_for_final], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		_stdout, _stderr = p_lambda_selection.communicate()
+		if _stderr:
+			print(_stderr.decode().strip())
+			sys.exit()
 		
 	else:
-		p_run_subsampling = subprocess.Popen(["python", subsampling_clip, path_to_input_with_prefix, args_1.preliminary, python_clip, str(args_1.subsample_size), str(args_1.rep_num), str(args_1.window_size), str(args_1.overlap_size), str(args_1.Lambda)], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-		p_run_subsampling.communicate()
+		p_run_subsampling = subprocess.Popen(["python", subsampling_clip, path_for_preprocess, path_for_preliminary, python_clip, str(args.subsample_size), str(args.rep_num), str(args.window_size), str(args.overlap_size), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		_stdout, _stderr = p_run_subsampling.communicate()
+		if _stderr:
+			print(_stderr.decode().strip())
+			sys.exit()
 		
 		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, args_1.preliminary, path_to_input_with_prefix, args_1.final, str(int(args_1.no_filtering)), str(args_1.Lambda)], stdout=subprocess.PIPE, stderr=sys.stdout.buffer)
-		p_postprocess.communicate()
+		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(int(args.no_filtering)), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		_stdout, _stderr = p_postprocess.communicate()
+		if _stderr:
+			print(_stderr.decode().strip())
+			sys.exit()
 				
 end = time.time()
+print("Main CliP function finished.")
 print(" Time elapsed: ", end - start, "seconds")
 
 

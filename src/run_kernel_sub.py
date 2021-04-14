@@ -33,13 +33,13 @@ window_size = float(sys.argv[6])
 overlap = float(sys.argv[7])
 #sample_id = sys.argv[9]
 
-r_all               = genfromtxt(prefix+"_r.txt", delimiter="\t")
-n_all               = genfromtxt(prefix+"_n.txt", delimiter="\t")
-minor_all           = genfromtxt(prefix+"_minor.txt", delimiter="\t")
-total_all           = genfromtxt(prefix+"_total.txt", delimiter="\t")
-purity              = genfromtxt(prefix+"_purity_ploidy.txt", delimiter="\t")
-coef_all            = genfromtxt(prefix+"_coef.txt", delimiter="\t")
-phicut_all          = genfromtxt(prefix+"_cutbeta.txt", delimiter=" ")
+r_all               = genfromtxt(os.path.join(prefix, "r.txt"), delimiter="\t")
+n_all               = genfromtxt(os.path.join(prefix, "n.txt"), delimiter="\t")
+minor_all           = genfromtxt(os.path.join(prefix, "minor.txt"), delimiter="\t")
+total_all           = genfromtxt(os.path.join(prefix, "total.txt"), delimiter="\t")
+purity              = genfromtxt(os.path.join(prefix, "purity_ploidy.txt"), delimiter="\t")
+coef_all            = genfromtxt(os.path.join(prefix, "coef.txt"), delimiter="\t")
+phicut_all          = genfromtxt(os.path.join(prefix, "cutbeta.txt"), delimiter=" ")
 No_mutation_all     = len(r_all)
 ploidy              = 2
 theta_hat_all       = r_all / n_all

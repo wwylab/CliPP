@@ -16,15 +16,15 @@ final_result = sys.argv[2]
 
 
 for i in range(11):
-    with open(final_result + "subclonal_structure_lam%s.txt" % (Lambda_list[i]), "r") as datafile:
+    with open(os.path.join(final_result, "subclonal_structure_lam%s.txt" % (Lambda_list[i])), "r") as datafile:
         cp_value = datafile.read().split()[2::3]
         max_cp_value = max(cp_value)
         max_cp_value = float(max_cp_value)
         #print(max_cp_value)
     purity_value = pd.read_csv(purity_file, sep="\t", header=None)[0][0]
     #print(purity_value)
-    source = final_result + "subclonal_structure_lam%s.txt" % (Lambda_list[i])
-    destination = final_result + "Best_lambda/"
+    source = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (Lambda_list[i]))
+    destination = os.path.join(final_result, "Best_lambda/")
     if not os.path.exists(destination):
         os.makedirs(destination)
     if abs(max_cp_value - purity_value)/purity_value < 0.05:
@@ -32,7 +32,7 @@ for i in range(11):
         
 existing_fnames = []
 for i in range(1, 12):
-    fname = destination + "subclonal_structure_lam%s.txt" % (Lambda_list[i-1])
+    fname = os.path.join(destination, "subclonal_structure_lam%s.txt" % (Lambda_list[i-1]))
     try:
         f = open(fname, "r")
         f.close()
@@ -51,7 +51,7 @@ if len(existing_fnames) == 0:
     lst_value = []
     lst_index = []
     for i in range(11):
-        with open(final_result + "subclonal_structure_lam%s.txt" % (lam_rev[i]), "r") as datafile:
+        with open(os.path.join(final_result, "subclonal_structure_lam%s.txt" % (lam_rev[i])), "r") as datafile:
             cp_value = datafile.read().split()[2::3]
             max_cp_value = max(cp_value)
             max_cp_value = float(max_cp_value)
@@ -62,7 +62,7 @@ if len(existing_fnames) == 0:
         lst_value.append(value)
     lst_pos = lst_value.index(min(lst_value))
     lam_pos = lam_rev[lst_pos]   
-    source = final_result + "subclonal_structure_lam%s.txt" % (lam_pos)
-    destination = final_result + "Best_lambda/"
+    source = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (lam_pos))
+    destination = os.path.join(final_result, "Best_lambda/")
     shutil.copy(source, destination) 
 

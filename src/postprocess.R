@@ -36,10 +36,10 @@ if(length(args) < 5){
     ifsubsample <- list.files(input.prefix,pattern = outfile3,full.names=T)
     if( file.exists(outfile1) || file.exists(outfile2) ){
       if(!file.exists(outfile1)){
-        r <- unlist(read.table(sprintf("%s_r.txt", preprocessed.prefix), header=F))
-        n <- unlist(read.table(sprintf("%s_n.txt", preprocessed.prefix), header=F))
-        minor <- unlist(read.table(sprintf("%s_minor.txt",  preprocessed.prefix), header=F))
-        total <- unlist(read.table(sprintf("%s_total.txt",  preprocessed.prefix), header=F))
+        r <- unlist(read.table(sprintf("%s/r.txt", preprocessed.prefix), header=F))
+        n <- unlist(read.table(sprintf("%s/n.txt", preprocessed.prefix), header=F))
+        minor <- unlist(read.table(sprintf("%s/minor.txt",  preprocessed.prefix), header=F))
+        total <- unlist(read.table(sprintf("%s/total.txt",  preprocessed.prefix), header=F))
         theta.hat <- r / n
         phi.hat <- ( 2) / ( minor / theta.hat - total + 2 )
         label <- unlist(read.table(outfile2,header=F))
@@ -120,10 +120,10 @@ if(length(args) < 5){
         }
       }
       consensus.phi         <- unlist(consensus.ccf[[1]]$center)
-      r <- unlist(read.table(sprintf("%s_r.txt", preprocessed.prefix), header=F))
-      n <- unlist(read.table(sprintf("%s_n.txt", preprocessed.prefix), header=F))
-      minor <- unlist(read.table(sprintf("%s_minor.txt",  preprocessed.prefix), header=F))
-      total <- unlist(read.table(sprintf("%s_total.txt",  preprocessed.prefix), header=F))
+      r <- unlist(read.table(sprintf("%s/r.txt", preprocessed.prefix), header=F))
+      n <- unlist(read.table(sprintf("%s/n.txt", preprocessed.prefix), header=F))
+      minor <- unlist(read.table(sprintf("%s/minor.txt",  preprocessed.prefix), header=F))
+      total <- unlist(read.table(sprintf("%s/total.txt",  preprocessed.prefix), header=F))
       theta.hat <- r / n
       phi.hat <- ( 2) / ( minor / theta.hat - total + 2 )
       No.mutations <- length(r)
@@ -316,10 +316,10 @@ if(length(args) < 5){
   ifsubsample <- list.files(input.prefix,pattern = outfile3,full.names=T)
   if( file.exists(outfile1) || file.exists(outfile2) ){
     if(!file.exists(outfile1)){
-      r <- unlist(read.table(sprintf("%s_r.txt", preprocessed.prefix), header=F))
-      n <- unlist(read.table(sprintf("%s_n.txt", preprocessed.prefix), header=F))
-      minor <- unlist(read.table(sprintf("%s_minor.txt",  preprocessed.prefix), header=F))
-      total <- unlist(read.table(sprintf("%s_total.txt",  preprocessed.prefix), header=F))
+      r <- unlist(read.table(sprintf("%s/r.txt", preprocessed.prefix), header=F))
+      n <- unlist(read.table(sprintf("%s/n.txt", preprocessed.prefix), header=F))
+      minor <- unlist(read.table(sprintf("%s/minor.txt",  preprocessed.prefix), header=F))
+      total <- unlist(read.table(sprintf("%s/total.txt",  preprocessed.prefix), header=F))
       theta.hat <- r / n
       phi.hat <- ( 2) / ( minor / theta.hat - total + 2 )
       label <- unlist(read.table(outfile2,header=F))
@@ -400,10 +400,10 @@ if(length(args) < 5){
       }
     }
     consensus.phi         <- unlist(consensus.ccf[[1]]$center)
-    r <- unlist(read.table(sprintf("%s_r.txt", preprocessed.prefix), header=F))
-    n <- unlist(read.table(sprintf("%s_n.txt", preprocessed.prefix), header=F))
-    minor <- unlist(read.table(sprintf("%s_minor.txt",  preprocessed.prefix), header=F))
-    total <- unlist(read.table(sprintf("%s_total.txt",  preprocessed.prefix), header=F))
+    r <- unlist(read.table(sprintf("%s/r.txt", preprocessed.prefix), header=F))
+    n <- unlist(read.table(sprintf("%s/n.txt", preprocessed.prefix), header=F))
+    minor <- unlist(read.table(sprintf("%s/minor.txt",  preprocessed.prefix), header=F))
+    total <- unlist(read.table(sprintf("%s/total.txt",  preprocessed.prefix), header=F))
     theta.hat <- r / n
     phi.hat <- ( 2) / ( minor / theta.hat - total + 2 )
     No.mutations <- length(r)

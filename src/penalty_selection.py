@@ -14,13 +14,9 @@ Lambda_list = [0.01,0.03,0.05,0.075,0.1,0.125,0.15,0.175,0.2,0.225,0.25]
 purity_file = sys.argv[1]
 final_result = sys.argv[2]
 
-
 for i in range(11):
-    with open(os.path.join(final_result, "subclonal_structure_lam%s.txt" % (Lambda_list[i])), "r") as datafile:
-        cp_value = datafile.read().split()[2::3]
-        max_cp_value = max(cp_value)
-        max_cp_value = float(max_cp_value)
-        #print(max_cp_value)
+    datafile = pd.read_csv(os.path.join(final_result, "subclonal_structure_lam%s.txt" % (Lambda_list[i])), sep = "\t")
+    max_cp_value = max(datafile["cellular_prevalence"])
     purity_value = pd.read_csv(purity_file, sep="\t", header=None)[0][0]
     #print(purity_value)
     source = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (Lambda_list[i]))
@@ -51,11 +47,8 @@ if len(existing_fnames) == 0:
     lst_value = []
     lst_index = []
     for i in range(11):
-        with open(os.path.join(final_result, "subclonal_structure_lam%s.txt" % (lam_rev[i])), "r") as datafile:
-            cp_value = datafile.read().split()[2::3]
-            max_cp_value = max(cp_value)
-            max_cp_value = float(max_cp_value)
-            #print(max_cp_value)
+        datafile_1 = pd.read_csv(os.path.join(final_result, "subclonal_structure_lam%s.txt" % (lam_rev[i])), sep = "\t")
+        max_cp_value = max(datafile_1["cellular_prevalence"])
         purity_value = pd.read_csv(purity_file, sep="\t", header=None)[0][0]
         #print(purity_value)
         value = abs(max_cp_value - purity_value)/purity_value
@@ -65,4 +58,3 @@ if len(existing_fnames) == 0:
     source = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (lam_pos))
     destination = os.path.join(final_result, "Best_lambda/")
     shutil.copy(source, destination) 
-

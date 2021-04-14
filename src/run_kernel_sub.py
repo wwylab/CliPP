@@ -80,15 +80,15 @@ for j in range(1,rep+1):
     phicut = phicut_all[sample_index,:]
     No_mutation = len(r)
 
-    alpha             = 0.8;
-    gamma             = 3.7;
-    rho               = 1.02;
-    precision         = 0.01;
-    Run_limit         = 1e4;
-    control_large     = 5;
-    post_th           = 0.05;
-    least_diff        = 0.01;
-    least_mut         = np.ceil(0.05 * No_mutation);
+    alpha             = 0.8
+    gamma             = 3.7
+    rho               = 1.02
+    precision         = 0.01
+    Run_limit         = 1e4
+    control_large     = 5
+    post_th           = 0.05
+    least_diff        = 0.01
+    least_mut         = np.ceil(0.05 * No_mutation)
     Lambda_list = [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25]
     wcut=phicut
 

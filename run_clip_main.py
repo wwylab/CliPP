@@ -5,11 +5,10 @@ from os import listdir
 import json
 import subprocess
 import time
+import shutil
 
 parser = argparse.ArgumentParser()
-#parser.add_argument("-s", "--snv", type=str, required=True, help="Root path of the snv input")
-#parser.add_argument("-c", "--cn", type=str, required=True, help="Root path of the cna input")
-#parser.add_argument("-p", "--purity", type=str, required=True, help="Root path of the purity input")
+
 parser.add_argument("snv_input", type=str, help="Path of the snv input.")
 parser.add_argument("cn_input", type=str, help="Path of the copy number input.")
 parser.add_argument("purity_input", type=str, help="Path of the purity input.")
@@ -17,7 +16,6 @@ parser.add_argument("-i", "--sample_id", type=str, default="sample_id", help="Na
 parser.add_argument("-b", "--subsampling", action='store_true', help="Whether doing subsampling or not. Default is not doing the subsampling, and a flag -b is needed when you want to do subsampling.")
 parser.add_argument("-l", "--lam", type=float, help="The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.")
 parser.add_argument("-p", "--preprocess", type=str, default="preprocess_result/", help="Directory that stores the preprocess results. Default name is 'preprocess_result/'.")
-parser.add_argument("-r", "--preliminary", type=str, default="preliminary_result/", help="Directory that stores the output of the kernel function, which is considered as the preliminary results. Default name is 'preliminary_result/'.")
 parser.add_argument("-f", "--final", type=str, default="final_result/", help="Directory that stores the final results after postprocessing. Default name is 'final_result/'.")
 
 parser.add_argument("-s", "--subsample_size", type=int, help="(Required if doing subsampling) The number of SNVs you want to include in each subsamples.")
@@ -35,7 +33,7 @@ if not os.path.exists(result_dir):
 	os.makedirs(result_dir)
 
 path_for_preprocess = os.path.join(result_dir, args.preprocess)
-path_for_preliminary = os.path.join(result_dir, args.preliminary)
+path_for_preliminary = os.path.join(result_dir, "preliminary_result")
 path_for_final = os.path.join(result_dir, args.final)
 
 start = time.time()
@@ -98,7 +96,6 @@ else:
 	if args.subsample_size == None:
 		sys.exit("Need an input for subsample_size")
 		
-	
 	if args.rep_num == None:
 		sys.exit("Need an input for rep_num")
 	
@@ -136,6 +133,8 @@ else:
 		if _stderr:
 			print(_stderr.decode().strip())
 			sys.exit()
+
+shutil.rmtree(path_for_preliminary)
 				
 end = time.time()
 print("Main CliP function finished.")

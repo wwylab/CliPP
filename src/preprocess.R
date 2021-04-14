@@ -1,3 +1,4 @@
+options(warn=-1)
 # The script takes commandline arguments: input_SNV input_CNV purity_file sample_id Output_dir
 args = commandArgs(trailingOnly=TRUE)
 # debug use

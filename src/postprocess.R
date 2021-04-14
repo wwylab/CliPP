@@ -296,12 +296,21 @@ if(length(args) < 5){
             refine <- T
           }
         }
+
+        Mut_position <- read.table(sprintf("%s/multiplicity.txt", preprocessed.prefix), header=F)[c(1,2)]
+        Mut_position <- cbind(Mut_position,label)
+        colnames(Mut_position)[1]<-"chromosome_index"
+        colnames(Mut_position)[2]<-"position"
+        colnames(Mut_position)[3]<-"cluster_index"
+        
+        colnames(suma) <- c("cluster_index", "num_SNV", "cellular_prevalence")
+        
+        write.table(Mut_position, file = sprintf("%s/mutation_assignments_lam%s.txt",
+                                          output.prefix, lam), quote = F, sep = "\t", 
+                    col.names = T, row.names = F )
         write.table(suma, file = sprintf("%s/subclonal_structure_lam%s.txt",
                                          output.prefix, lam), quote = F, sep = "\t", 
-                    col.names = F, row.names = F )
-        write.table(label, file = sprintf("%s/mutation_assignments_lam%s.txt",
-                                          output.prefix, lam), quote = F, sep = "\t", 
-                    col.names = F, row.names = F )
+                    col.names = T, row.names = F )
         
         
       }
@@ -576,13 +585,20 @@ if(length(args) < 5){
           refine <- T
         }
       }
+
+      Mut_position <- read.table(sprintf("%s/multiplicity.txt", preprocessed.prefix), header=F)[c(1,2)]
+      Mut_position <- cbind(Mut_position,label)
+      colnames(Mut_position)[1]<-"chromosome_index"
+      colnames(Mut_position)[2]<-"position"
+      colnames(Mut_position)[3]<-"cluster_index"
+      colnames(suma) <- c("cluster_index", "num_SNV", "cellular_prevalence")
+
+      write.table(Mut_position, file = sprintf("%s/mutation_assignments_lam%s.txt",
+                                        output.prefix, lam), quote = F, sep = "\t", 
+                  col.names = T, row.names = F )
       write.table(suma, file = sprintf("%s/subclonal_structure_lam%s.txt",
                                        output.prefix, lam), quote = F, sep = "\t", 
-                  col.names = F, row.names = F )
-      write.table(label, file = sprintf("%s/mutation_assignments_lam%s.txt",
-                                        output.prefix, lam), quote = F, sep = "\t", 
-                  col.names = F, row.names = F )
-      
+                  col.names = T, row.names = F )      
       
     }
   }   

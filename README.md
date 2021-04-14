@@ -9,8 +9,11 @@ Subpopulations of tumor cells characterized by mutation profiles may confer diff
 - R [>3.3.1]
 - python [>3.5.1]
 
-## Installing
-There is no need to install CliP.
+## Setting up CliP
+```
+git clone https://github.com/wwylab/CliP.git
+cd CliP
+```
 
 ## Structure of CliP implementation
 The flow chart below shows the CliP implementation. Raw functions and scripts are under `scr/`. 
@@ -50,8 +53,8 @@ python run_clip_main.py sample/sample.snv.txt sample/sample.cna.txt sample/sampl
 A full manual is as follows:
 
 ```
-usage: run_clip_main.py [-h] [-i SAMPLE_ID] [-e PREPROCESS] [-b] [-r PRELIMINARY] [-f FINAL] [-nf]
-                        [-l LAMBDA] [-s SUBSAMPLE_SIZE] [-n REP_NUM] [-w WINDOW_SIZE] [-o OVERLAP_SIZE]
+usage: run_clip_main.py [-h] [-i SAMPLE_ID] [-e PREPROCESS] [-b] [-f FINAL] [-l LAMBDA] 
+                        [-s SUBSAMPLE_SIZE] [-n REP_NUM] [-w WINDOW_SIZE] [-o OVERLAP_SIZE]
                         snv_input cn_input purity_input
 
 positional arguments:
@@ -71,12 +74,9 @@ optional arguments:
   -b, --subsampling     Whether doing subsampling or not. Default is not doing the subsampling, and a 
                         flag -b is needed for subsampling.
   -p PREPROCESS, --preprocess PREPROCESS
-                        Path/Filename that stores the preprocess results. Default name is 'preprocess_result/'.
-  -r PRELIMINARY, --preliminary PRELIMINARY
-                        Path/Filename that stores the output of the kernel function, which is considered 
-                        as the preliminary results. Default name is 'preliminary_result/'.
+                        Directory that stores the preprocess results. Default name is 'preprocess_result/'.
   -f FINAL, --final FINAL
-                        Path/Filename that stores the final results after postprocessing. Default name is 
+                        Directory that stores the final results after postprocessing. Default name is 
                         'final_result/'.
 ```
 
@@ -104,10 +104,10 @@ The output for CliP is two-fold:
 If you are using this framework, please cite our paper
 ```
 @article{Jiang2021,
-  title={CliP: subclonal architecture reconstruction of cancer cells in DNA sequencing data using a penalized likelihood model},
-  author={Jiang, Yujie and Yu, Kaixian and Ji, Shuangxi and Shin, Seung Jun and Cao, Shaolong and Montierth, Matthew D and Huang, Licai and Kopetz, Scott and Msaouel, Pavlos and Wang, Jennifer Rui and Kimmel, Marek and Zhu, Hongtu and Wang, Wenyi},
-  journal={bioRxiv},
-  year={2021},
-  publisher={Cold Spring Harbor Laboratory}
-}
+    title = {CliP: subclonal architecture reconstruction of cancer cells in DNA sequencing data using a penalized likelihood model},
+    author = {Jiang, Yujie and Yu, Kaixian and Ji, Shuangxi and Shin, Seung Jun and Cao, Shaolong and Montierth, Matthew D and Huang, Licai and Kopetz, Scott and Msaouel, Pavlos and Wang, Jennifer Rui and Kimmel, Marek and Zhu, Hongtu and Wang, Wenyi},
+    journal = {bioRxiv},
+    year = {2021},
+    publisher = {Cold Spring Harbor Laboratory}
+    }
 ```

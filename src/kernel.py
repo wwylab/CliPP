@@ -7,12 +7,10 @@ email: yujiejiang679@gmail.com
 
 import numpy as np
 import scipy as sp
-import scipy.sparse
-from scipy.special import logit
-from scipy.special import expit
+from scipy.special import logit, expit
 # the Soft Thresholding function
 def ST(x, lam):
-	val = np.abs(x) - lam;
+	val = np.abs(x) - lam
 	val = np.sign(x)*(val > 0) * val
 	return val
 
@@ -51,7 +49,7 @@ def CliP(r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, preci
 	row_id   = np.append(row1, row2)
 	vals     = np.append( np.ones(int(No_mutation * (No_mutation - 1) / 2))  ,-np.ones( int(No_mutation * (No_mutation - 1) / 2)))
 	DELTA    = sp.sparse.coo_matrix(( vals, (row_id, col_id) ), shape = ( No_mutation , int(No_mutation * (No_mutation - 1) / 2) ) )
-	residual = 100;
+	residual = 100
 	while residual > precision and k < Run_limit:
 		print('\r',k,',',residual,end="")
 		k        = k + 1

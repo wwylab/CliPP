@@ -53,13 +53,13 @@ Here are the details of the options:
 * ```purity```: A mandatory argument. Root path of the purity input.
 * ```sample_id```: The name of the sample being processed. Default is ```sample```.
 * ```preprocess_result```: Directory that stores the preprocess results. Default name is ```intermediate/```.
-* ```If_subsampling```: Whether doing subsampling or not. Default is ```False```, and a flag ```-b``` is needed when you want to do subsampling
+* ```If_subsampling```: Whether doing subsampling or not. Default is not doing the subsampling, and a flag ```-b``` is needed when you want to do subsampling.
 * ```preliminary_result```: Directory that stores the output of the kernel function, which is considered as the preliminary results. Default name is ```Result_nosub/``` (no_subsampling).
 * ```final_result```: Directory that stores the final results after postprocessing. Default name is ```final_result/```.
 * ```filtering_flag```: Whether filtering is needed during the postprocessing. Take value of 0 or 1. Default is 1 (need filtering).
 * ```Lambda```: The penalty parameter, which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.
 
-The followings are parameters only needed when doing subsampling. We take partitions from 0-1 (determined by users through windows, default at 0.05), then take the VAF of each SNV as an initial estimation of its CP value and randomly assign SNVs that belong to their corresponding windows. The number of sampled SNV is proportional to number of total SNVs belongs to each window. 
+The followings are parameters only needed when doing subsampling. We take partitions from 0-1 (determined by users through window sizes, default at 0.05), then take the VAF of each SNV as an initial estimation of its CP value and randomly assign SNVs that belong to their corresponding windows. The number of sampled SNV is proportional to number of total SNVs belongs to each window. 
 * ```No_subsampling```: Required if doing subsampling. The number of SNVs you want to include in each subsamples.
 * ```Rep_num```: Required if doing subsampling. The number of random subsamples needed.
 * ```window_size```: Controls the length of the window. Takes value between 0 and 1. Default is ```0.05```.

@@ -1,3 +1,10 @@
+'''----------------------------------------------------------------------
+This script is a rule of thumb method to select one preferable penalty parameter (lambda)
+when you run CliP with multiple lambdas.
+By default the Lambda_list takes value of [0.01,0.03,0.05,0.075,0.1,0.125,0.15,0.175,0.2,0.225,0.25]
+----------------------------------------------------------------------
+'''
+
 import os
 import os.path
 from os import path
@@ -40,7 +47,6 @@ if len(passed_lambda) == 0:
         datafile_1 = pd.read_csv(os.path.join(final_result, "subclonal_structure_lam%s.txt" % (lam_rev[i])), sep = "\t")
         max_cp_value = max(datafile_1["cellular_prevalence"])
         purity_value = pd.read_csv(purity_file, sep="\t", header=None)[0][0]
-        #print(purity_value)
         value = abs(max_cp_value - purity_value)/purity_value
         lst_value.append(value)
     lst_pos = lst_value.index(min(lst_value))

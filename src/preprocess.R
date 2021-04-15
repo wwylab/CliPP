@@ -6,9 +6,7 @@ snv.file      <- args[1]
 cn.file       <- args[2]
 purity.file   <- args[3]
 sample.id     <- args[4]
-# sample.id     <-  "sample"
 output.prefix <- args[5]
-# output.prefix <- "tmp"
 
 print(snv.file)
 print(cn.file)
@@ -27,7 +25,6 @@ if(!file.exists(purity.file)){
     stop(sprintf('The Input Purity file: %s Does not exist.', purity.file))
 }
 
-# setwd(dirname(snv.file))
 
 # if the output directory does not exist, then try to create the full path
 if(!dir.exists(output.prefix)){
@@ -36,7 +33,6 @@ if(!dir.exists(output.prefix)){
 # some utility functions used to conduct the linear approximation
 
 theta = function(w,bv,cv,cn,purity){
-    #return((exp(w)*bv)/(cn+exp(w)*cv))
     return((exp(w)*bv)/( (1+exp(w))*cn*(1-purity) + (1+exp(w))*cv*purity) )
 }
 LinearEvaluate <- function(x,a,b){
@@ -130,8 +126,7 @@ minor.read     <- minor.read[valid.ind]
 total.read     <- total.read[valid.ind]
 No.mutations   <- length(valid.ind)
 
-# process copy number ####
-#cn.file        <- sprintf("100_2_60_0_segments.txt")
+# process copy number
 
 cn.tmp         <- read.table(cn.file,header=T, stringsAsFactors = F)
 cn.tmp         <- cn.tmp[which(!is.na(cn.tmp[,"minor_cn"])),]
@@ -231,10 +226,7 @@ if(length(clonal.ind) > 0){
     write.table(outlier.higherEnd, file=sprintf("%s/outPosition.txt", output.prefix),
                 quote=F, col.names = F, row.names = F)
 }
-# png(file=sprintf("%s/%s_phi.png", output.prefix, sample.id))
-# # print(valid.ind)
-# hist(phi[valid.ind])
-# dev.off()
+
 
 drop.ind       <- setdiff(1:length(minor.read),valid.ind)
 dropped.SNV    <- append(dropped.SNV,CombineReasons(mutation.chrom, mutation.pos, drop.ind, 

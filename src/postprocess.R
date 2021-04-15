@@ -7,7 +7,7 @@
 # Last updated: 04/02/2021
 # Email: yujiejiang679@gmail.com
 #------------------------------------------------------------# 
-# The script takes commandline arguments: CliP_results_dir preprocessed_output_dir Output_dir lambda filtering_flag
+# The script takes commandline arguments: CliP_results_dir preprocessed_output_dir Output_dir filtering_flag lambda
 # The results folder should contain results for only one sample and the non-downsampled version is always given higher priority. 
 # The postprocessing is done per lam, the results of the same sample for different lambda can be stored in the same folder.
 args <- commandArgs(trailingOnly = T)
@@ -610,9 +610,6 @@ if(length(args) < 5){
         index_dict[[rev_cluster_index[i]]] <- i
       }
 
-      #for (i in 1:length(label)){
-      #  label[i] = index_dict[[label[i]]]
-      #}
 
       label = sapply(label+1,
                      function(y){

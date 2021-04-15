@@ -6,7 +6,7 @@ Authors: Kaixian Yu, Yujie Jiang
 Date: 04/02/2021
 Email: yujiejiang679@gmail.com
 ----------------------------------------------------------------------
-This script takes the following argument: path_to_input path_to_output path_to_clip lam No_subsampling Rep_num window_size overlap_size
+This script takes the following argument: path_to_input path_to_output path_to_clip No_subsampling Rep_num window_size overlap_size lam
 -----------------------------------------------------------------------
 Debug use
 sys.argv = ['/Users/kaixiany/Working/CliP/Sample_data/intermediate/', '/Users/kaixiany/Working/CliP/Sample_data/results/', '/Users/kaixiany/Working/CliP/', '1.5', '1500', '1', '0.05', '0']
@@ -65,8 +65,6 @@ SNVcount = [len(index[i]) for i in range(len(index))]
 sampling_proportion = No_subsampling / No_mutation_all
 SNVtoSample = [np.round(SNVcount[i]*sampling_proportion) for i in range(len(SNVcount))]
 
-
-# start = time.time()
 for j in range(1,rep+1):
     np.random.seed(j)
     sample_index = [ np.random.choice(index[i],int(SNVtoSample[i]), False) for i in np.where(np.array(SNVtoSample,dtype='int') > 0)[0] ]
@@ -119,6 +117,3 @@ for j in range(1,rep+1):
             summary[i,1] = len(np.where(res['label']==labl[i] )[0])
 	
         np.savetxt('%s/lam%s_rep%s.txt'%(sys.argv[2], str(Lambda),str(j)), summary ,fmt='%d\t%d\t%.3f')
-    
-# end = time.time()
-# print(" Time elapsed: ", end - start, "seconds")

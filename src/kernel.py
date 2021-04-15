@@ -1,5 +1,5 @@
 '''
-CliP the python version, tested with 3.3.1 and 3.4.5, should work with all 3.X and 2.7.6+, but not tested
+CliP the python version, tested with 3.3.1 and 3.4.5. Should work with all 3.X and 2.7.6+, but not tested
 Author: Kaixian Yu, Yujie Jiang
 email: yujiejiang679@gmail.com
 04/02/2021
@@ -19,15 +19,13 @@ def CliP(r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, preci
          control_large, least_mut, post_th, least_diff, coef, wcut, purity):
 	No_mutation                                = len(r)
 	NO_MUTATION                                = len(r)
-	# probability
+	# VAF
 	theta_hat                                  = r / n
-	# phi_i in eq(3)
-	# phi_hat                                    = ploidy / ( minor / theta_hat - total + ploidy )
 	phi_hat                                    = theta_hat * ((ploidy - purity*ploidy + purity*total) / minor)
-        # constrain phi_hat in (0,1)
+    # constrain phi_hat in (0,1)
 	scale_parameter                            = np.max( [1, np.max(phi_hat)] )
 	phi_new                                    = phi_hat / scale_parameter
-        # control_large is used to avoid having large result
+    # control_large is used to avoid having large result
 	phi_new[ phi_new > expit(control_large) ]  = expit(control_large)
 	phi_new[ phi_new < expit(-control_large) ] = expit(-control_large)
 	w_new                                      = logit(phi_new)

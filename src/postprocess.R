@@ -297,8 +297,6 @@ if(length(args) < 5){
           }
         }
         
-        ptm <- proc.time()
-        
         rev_cluster_index <- rev(suma[,1]+1)
         index_dict <- list()
         for (i in c(1:(length(rev_cluster_index)))) {
@@ -309,12 +307,10 @@ if(length(args) < 5){
         #  label[i] = index_dict[[label[i]]]
         #}
         
-        label = lapply(label+1,
+        label = sapply(label+1,
                        function(y){
                          y = index_dict[[y]] - 1
                        })
-        
-        proc.time() - ptm
         
         Mut_position <- read.table(sprintf("%s/multiplicity.txt", preprocessed.prefix), header=F)[c(1,2)]
         Mut_position <- cbind(Mut_position,label)
@@ -325,6 +321,7 @@ if(length(args) < 5){
         colnames(suma) <- c("cluster_index", "num_SNV", "cellular_prevalence")
         
         suma[,"cluster_index"] = sort(0:(length(suma[,"cluster_index"])-1), decreasing = T)
+        suma = suma[order(suma[,"cluster_index"]),]
         
         write.table(Mut_position, file = sprintf("%s/mutation_assignments_lam%s.txt",
                                           output.prefix, lam), quote = F, sep = "\t", 
@@ -631,13 +628,14 @@ if(length(args) < 5){
       colnames(suma) <- c("cluster_index", "num_SNV", "cellular_prevalence")
       
       suma[,"cluster_index"] = sort(0:(length(suma[,"cluster_index"])-1), decreasing = T)
+      suma = suma[order(suma[,"cluster_index"]),]
       
       write.table(Mut_position, file = sprintf("%s/mutation_assignments_lam%s.txt",
                                         output.prefix, lam), quote = F, sep = "\t", 
                   col.names = T, row.names = F )
       write.table(suma, file = sprintf("%s/subclonal_structure_lam%s.txt",
                                        output.prefix, lam), quote = F, sep = "\t", 
-                  col.names = T, row.names = F )      
+                  col.names = T, row.names = F )   
       
     }
   }   

@@ -70,7 +70,8 @@ optional arguments:
   -l LAMBDA, --Lambda LAMBDA
                         The penalty parameter, which usually takes values from 0.01-0.25. If skipping 
                         this parameter, it will return a list of results that take value of [0.01, 
-                        0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.
+                        0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default, and 
+                        select a preferable one among them.
   -b, --subsampling     Whether doing subsampling or not. Default is not doing the subsampling, and a 
                         flag -b is needed for subsampling.
   -p PREPROCESS, --preprocess PREPROCESS

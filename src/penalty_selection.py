@@ -19,12 +19,14 @@ for i in range(11):
     max_cp_value = max(datafile["cellular_prevalence"])
     purity_value = pd.read_csv(purity_file, sep="\t", header=None)[0][0]
     #print(purity_value)
-    source = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (Lambda_list[i]))
+    source_1 = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (Lambda_list[i]))
+    source_2 = os.path.join(final_result, "mutation_assignments_lam%s.txt" % (Lambda_list[i]))
     destination = os.path.join(final_result, "Best_lambda/")
     if not os.path.exists(destination):
         os.makedirs(destination)
     if abs(max_cp_value - purity_value)/purity_value < 0.05:
-        shutil.copy(source, destination) 
+        shutil.copy(source_1, destination) 
+        shutil.copy(source_2, destination) 
         
 existing_fnames = []
 for i in range(1, 12):
@@ -55,6 +57,8 @@ if len(existing_fnames) == 0:
         lst_value.append(value)
     lst_pos = lst_value.index(min(lst_value))
     lam_pos = lam_rev[lst_pos]   
-    source = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (lam_pos))
+    source_1 = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (lam_pos))
+    source_2 = os.path.join(final_result, "mutation_assignments_lam%s.txt" % (lam_pos))
     destination = os.path.join(final_result, "Best_lambda/")
-    shutil.copy(source, destination) 
+    shutil.copy(source_1, destination) 
+    shutil.copy(source_2, destination) 

@@ -23,13 +23,13 @@ for i in range(11):
         passed_lambda.append(Lambda_list[i])
 if len(passed_lambda) > 0:
     selected_lambda = max(passed_lambda) 
-source_1 = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (selected_lambda))
-source_2 = os.path.join(final_result, "mutation_assignments_lam%s.txt" % (selected_lambda))
-destination = os.path.join(final_result, "Best_lambda/")
-if not os.path.exists(destination):
-    os.makedirs(destination)
-shutil.copy(source_1, destination) 
-shutil.copy(source_2, destination) 
+    source_1 = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (selected_lambda))
+    source_2 = os.path.join(final_result, "mutation_assignments_lam%s.txt" % (selected_lambda))
+    destination = os.path.join(final_result, "Best_lambda/")
+    if not os.path.exists(destination):
+        os.makedirs(destination)
+    shutil.copy(source_1, destination) 
+    shutil.copy(source_2, destination) 
 
 if len(passed_lambda) == 0:
     lam_rev = [0.25,0.225,0.2,0.175,0.15,0.125,0.1,0.075,0.05,0.03,0.01]
@@ -48,5 +48,7 @@ if len(passed_lambda) == 0:
     source_1 = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (lam_pos))
     source_2 = os.path.join(final_result, "mutation_assignments_lam%s.txt" % (lam_pos))
     destination = os.path.join(final_result, "Best_lambda/")
+    if not os.path.exists(destination):
+        os.makedirs(destination)
     shutil.copy(source_1, destination) 
     shutil.copy(source_2, destination) 

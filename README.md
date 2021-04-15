@@ -97,7 +97,8 @@ The followings parameters are only needed when doing subsampling. We take partit
 
 
 ## The CliP Outputs
-The output for CliP is two-fold:
+By default, all outputs will be stored in the folder named `sample_id`, and this name can be changed with the `-i` or `--sample_id ` option.
+The final result for CliP is two-fold:
 * The subclonal structure, i.e., clustering results: cluster number, the total number of SNVs in each cluster, and the estimated CP for each cluster.
 * The mutation assignment, i.e., cluster id for each mutation. This output can then serve as the basis for inference of phylogenetic trees.
 
@@ -110,5 +111,5 @@ If you are using this framework, please cite our paper
     journal = {bioRxiv},
     year = {2021},
     publisher = {Cold Spring Harbor Laboratory}
-    }
+}
 ```

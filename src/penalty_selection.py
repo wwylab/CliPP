@@ -21,7 +21,8 @@ for i in range(11):
     purity_value = pd.read_csv(purity_file, sep="\t", header=None)[0][0]
     if abs(max_cp_value - purity_value)/purity_value < 0.05:
         passed_lambda.append(Lambda_list[i])
-selected_lambda = max(passed_lambda) 
+if len(passed_lambda) > 0:
+    selected_lambda = max(passed_lambda) 
 source_1 = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (selected_lambda))
 source_2 = os.path.join(final_result, "mutation_assignments_lam%s.txt" % (selected_lambda))
 destination = os.path.join(final_result, "Best_lambda/")

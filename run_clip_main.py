@@ -135,7 +135,7 @@ else:
 			sys.exit()
 
 shutil.rmtree(path_for_preliminary)
-				
+
 end = time.time()
 print("Main CliP function finished.")
 print(" Time elapsed: ", end - start, "seconds")

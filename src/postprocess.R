@@ -296,7 +296,26 @@ if(length(args) < 5){
             refine <- T
           }
         }
-
+        
+        ptm <- proc.time()
+        
+        rev_cluster_index <- rev(suma[,1]+1)
+        index_dict <- list()
+        for (i in c(1:(length(rev_cluster_index)))) {
+          index_dict[[rev_cluster_index[i]]] <- i
+        }
+        
+        #for (i in 1:length(label)){
+        #  label[i] = index_dict[[label[i]]]
+        #}
+        
+        label = lapply(label+1,
+                       function(y){
+                         y = index_dict[[y]] - 1
+                       })
+        
+        proc.time() - ptm
+        
         Mut_position <- read.table(sprintf("%s/multiplicity.txt", preprocessed.prefix), header=F)[c(1,2)]
         Mut_position <- cbind(Mut_position,label)
         colnames(Mut_position)[1]<-"chromosome_index"
@@ -304,6 +323,8 @@ if(length(args) < 5){
         colnames(Mut_position)[3]<-"cluster_index"
         
         colnames(suma) <- c("cluster_index", "num_SNV", "cellular_prevalence")
+        
+        suma[,"cluster_index"] = sort(0:(length(suma[,"cluster_index"])-1), decreasing = T)
         
         write.table(Mut_position, file = sprintf("%s/mutation_assignments_lam%s.txt",
                                           output.prefix, lam), quote = F, sep = "\t", 
@@ -586,13 +607,31 @@ if(length(args) < 5){
         }
       }
 
+      rev_cluster_index <- rev(suma[,1]+1)
+      index_dict <- list()
+      for (i in c(1:(length(rev_cluster_index)))) {
+        index_dict[[rev_cluster_index[i]]] <- i
+      }
+
+      #for (i in 1:length(label)){
+      #  label[i] = index_dict[[label[i]]]
+      #}
+
+      label = sapply(label+1,
+                     function(y){
+                       y = index_dict[[y]] - 1
+                     })
+      
       Mut_position <- read.table(sprintf("%s/multiplicity.txt", preprocessed.prefix), header=F)[c(1,2)]
       Mut_position <- cbind(Mut_position,label)
       colnames(Mut_position)[1]<-"chromosome_index"
       colnames(Mut_position)[2]<-"position"
       colnames(Mut_position)[3]<-"cluster_index"
+      
       colnames(suma) <- c("cluster_index", "num_SNV", "cellular_prevalence")
-
+      
+      suma[,"cluster_index"] = sort(0:(length(suma[,"cluster_index"])-1), decreasing = T)
+      
       write.table(Mut_position, file = sprintf("%s/mutation_assignments_lam%s.txt",
                                         output.prefix, lam), quote = F, sep = "\t", 
                   col.names = T, row.names = F )

@@ -4,7 +4,6 @@ import os
 from os import listdir
 import json
 import subprocess
-import time
 import shutil
 
 parser = argparse.ArgumentParser()
@@ -36,7 +35,6 @@ path_for_preprocess = os.path.join(result_dir, args.preprocess)
 path_for_preliminary = os.path.join(result_dir, "preliminary_result")
 path_for_final = os.path.join(result_dir, args.final)
 
-start = time.time()
 # Run preprocess
 print("Running preprocessing...")
 p_preprocess = subprocess.Popen(["Rscript", run_preprocess, args.snv_input, args.cn_input, args.purity_input, args.sample_id, path_for_preprocess], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -136,8 +134,6 @@ else:
 
 shutil.rmtree(path_for_preliminary)
 
-end = time.time()
 print("Main CliP function finished.")
-print(" Time elapsed: ", end - start, "seconds")
 
 

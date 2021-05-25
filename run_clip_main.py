@@ -5,6 +5,8 @@ from os import listdir
 import json
 import subprocess
 import shutil
+import time
+import threading
 
 parser = argparse.ArgumentParser()
 
@@ -53,8 +55,13 @@ run_lambda_selection = os.path.join(current_dir, "src/penalty_selection.py")
 print("Running the main CliP function...")
 if args.subsampling == False:
 	if args.lam == None:
-		p_run_CliP = subprocess.Popen(["python", run_CliP, path_for_preprocess, path_for_preliminary, python_clip], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		_stdout, _stderr = p_run_CliP.communicate()
+		start = time.time()
+		t = threading.Thread(name="Running the main CliP function", target=run_clip, args=(path_for_preprocess,path_for_preliminary))
+		t.start()
+		t.join()
+		end = time.time()
+		elapsed_time = end - start
+		print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
 		if _stderr:
 			print(_stderr.decode().strip())
 			sys.exit()

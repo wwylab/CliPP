@@ -91,19 +91,12 @@ for j in range(1,rep+1):
     wcut=phicut
 
     if len(sys.argv) < 9:
-        for Lambda in Lambda_list:
-            res = CliP(r, n, minor, total, ploidy, Lambda*0.01, alpha, rho, gamma, Run_limit, precision, 
-            control_large, least_mut, post_th, least_diff, coef, wcut, purity)
-            labl = np.unique(res['label'])
-            summary = np.zeros([len(labl),3])
-		
-            for i in range(len(labl)):
-                summary[i,0] = labl[i]
-                summary[i,2] = np.round(np.unique( res['phi'][np.where(res['label']==labl[i] )[0]])[0],3)
-                summary[i,1] = len(np.where(res['label']==labl[i] )[0])
-		
-            np.savetxt('%s/lam%s_rep%s.txt'%(sys.argv[2], str(Lambda),str(j)), summary ,fmt='%d\t%d\t%.3f')
-    
+	pool = ThreadPoolExecutor(max_workers=11)
+    	future_to_lambdas = []
+    	for Lambda in Lambda_list:
+        	future_to_lambdas.append(pool.submit(clip_kernel, preliminary_result, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision,
+                   control_large, least_mut, post_th, least_diff, coef, wcut, purity))
+	concurrent.futures.wait(future_to_lambdas,timeout=None,return_when=ALL_COMPLETED)
     else:
         Lambda    = float(sys.argv[8])
         res = CliP(r, n, minor, total, ploidy, Lambda*0.01, alpha, rho, gamma, Run_limit, precision, 

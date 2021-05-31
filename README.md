@@ -41,7 +41,7 @@ There are three required input files:
 * ```minor_cn```: The copy number of the minor allele. This must be less than equal the value in the major_cn column.
 * ```total_cn```: The sum of major_cn and minor_cn.
 
-3. ```purity.txt```: A file storing a scalar purity value between 0 and 1.
+3. ```sample.purity.txt```: A file storing a scalar purity value between 0 and 1.
 
 A simulated sample input data is under `sample/`. 
 
@@ -71,17 +71,17 @@ optional arguments:
   -i SAMPLE_ID, --sample_id SAMPLE_ID
                         Name of the sample being processed. Default is 'sample_id'.
   -l LAM, --lam LAM
-                        The penalty parameter (lambda), which usually takes values from 0.01-0.25. If skipping 
-                        this parameter, it will return a list of results that take value of [0.01, 
-                        0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default, and 
-                        select a preferable one among them.
-  -b, --subsampling     Whether doing subsampling or not. Default is not doing the subsampling, and a 
-                        flag -b is needed for subsampling.
+                        The penalty parameter (lambda), which usually takes values from 0.01-0.25. 
+                        If skipping this parameter, it will return a list of results that take value 
+                        of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] 
+                        by default, and select a preferable one among them.
+  -b, --subsampling     Whether doing subsampling or not. Default is not doing the subsampling, 
+                        and a flag -b is needed for subsampling.
   -p PREPROCESS, --preprocess PREPROCESS
                         Directory that stores the preprocess results. Default name is 'preprocess_result/'.
   -f FINAL, --final FINAL
-                        Directory that stores the final results after postprocessing. Default name is 
-                        'final_result/'.
+                        Directory that stores the final results after postprocessing. Default name
+                        is 'final_result/'.
 ```
 
 The followings parameters are only needed when doing subsampling. We take partitions from 0 to 1 (determined by the `WINDOW_SIZE` parameter, default at `0.05`), then take the VAF of each SNV as an initial estimation of its cellular prevalence (CP) value and randomly assign SNVs that belong to their corresponding windows. The number of sampled SNV is proportional to number of total SNVs belonging to each window. 
@@ -92,16 +92,19 @@ The followings parameters are only needed when doing subsampling. We take partit
   -n REP_NUM, --rep_num REP_NUM
                         (Required if doing subsampling) The number of random subsamples needed.
   -w WINDOW_SIZE, --window_size WINDOW_SIZE
-                        Controls the length of the window. Takes value between 0 and 1. Default is 0.05.
+                        Controls the length of the window. Takes value between 0 and 1. Default 
+                        is 0.05.
   -o OVERLAP_SIZE, --overlap_size OVERLAP_SIZE
-                        Controls the overlapped length of two consecutive windows. Takes value between 
-                        0 and 1. Default is 0.
+                        Controls the overlapped length of two consecutive windows. Takes value 
+                        between 0 and 1. Default is 0.
 ```
 
 
 ## The CliP Outputs
 By default, all outputs will be stored in the folder named `sample_id`, and this name can be changed with the `-i` or `--sample_id ` option.
+
 In final results, cluster index = 0 indicates clonal mutations, while non-zero cluster indexes indicate subclonal mutations.
+
 The final result for CliP is two-fold:
 * The subclonal structure, i.e., clustering results: cluster number, the total number of SNVs in each cluster, and the estimated CP for each cluster.
 * The mutation assignment, i.e., cluster id for each mutation. This output can then serve as the basis for inference of phylogenetic trees.

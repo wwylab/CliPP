@@ -24,6 +24,8 @@ The flow chart below shows the CliP implementation. Raw functions and scripts ar
 
 CliP can run on samples with up to 50,000 SNVs on a machine with 256GB memory. It may require more memory when there are more SNVs. When that happens, we apply a downsampling strategy, as implemented in all other subclonal reconstruction methods. 
 
+Furthermore, CliP is automatically run in parallel when users have multiple cores available.
+
 ## Input data sample
 There are three required input files:
 

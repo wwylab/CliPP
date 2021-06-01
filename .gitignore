@@ -5,4 +5,8 @@ Results_nosub/
 intermediate/
 Rplots.pdf
 Final_res/
+sample_id/
+sample/
+venv/
+.idea/
 .vscode/settings.json

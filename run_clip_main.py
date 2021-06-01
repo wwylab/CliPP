@@ -8,6 +8,9 @@ import shutil
 import time
 import threading
 
+from src.run_kernel_nosub import run_clip_nosub
+from src.run_kernel_sub import run_clip_sub
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("snv_input", type=str, help="Path of the snv input.")
@@ -56,15 +59,12 @@ print("Running the main CliP function...")
 if args.subsampling == False:
 	if args.lam == None:
 		start = time.time()
-		t = threading.Thread(name="Running the main CliP function", target=run_clip, args=(path_for_preprocess,path_for_preliminary))
+		t = threading.Thread(name="Running the main CliP function", target=run_clip_nosub, args=(path_for_preprocess, path_for_preliminary))
 		t.start()
 		t.join()
 		end = time.time()
 		elapsed_time = end - start
 		print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
-		if _stderr:
-			print(_stderr.decode().strip())
-			sys.exit()
 		
 		# Run postprocess
 		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(1)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -105,11 +105,16 @@ else:
 		sys.exit("Need an input for rep_num")
 	
 	if args.lam == None:
-		p_run_subsampling = subprocess.Popen(["python", subsampling_clip, path_for_preprocess, path_for_preliminary, python_clip, str(args.subsample_size), str(args.rep_num), str(args.window_size), str(args.overlap_size)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		_stdout, _stderr = p_run_subsampling.communicate()
-		if _stderr:
-			print(_stderr.decode().strip())
-			sys.exit()
+
+		start = time.time()
+		t = threading.Thread(name="Running the main CliP function", target=run_clip_sub, args=(path_for_preprocess,path_for_preliminary,python_clip, args.subsample_size,
+			args.rep_num, args.window_size, args.overlap_size))
+		
+		t.start()
+		t.join()
+		end = time.time()
+		elapsed_time = end - start
+		print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
 		
 		# Run postprocess
 		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(1)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

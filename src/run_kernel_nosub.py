@@ -17,10 +17,11 @@ import concurrent
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, ALL_COMPLETED
-from CliP import *
+import numpy as np
 from numpy import genfromtxt
+from src.kernel import CliP
 
-def clip_kernel(preliminary_result, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef, wcut, purity):
+def clip_kernel_nosub(preliminary_result, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef, wcut, purity):
     res = CliP(r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef, wcut, purity)
     labl = np.unique(res['label'])
     summary = np.zeros([len(labl), 3])
@@ -35,7 +36,7 @@ def clip_kernel(preliminary_result, r, n, minor, total, ploidy, Lambda, alpha, r
     np.savetxt('%s/lam%s_summary_table.txt' % (preliminary_result, str(Lambda)), summary, fmt='%d\t%d\t%.3f')
     return 1
 
-def run_clip(prefix, preliminary_result, _lambda_list):
+def run_clip_nosub(prefix, preliminary_result):
     if not os.path.exists(preliminary_result):
         os.makedirs(preliminary_result)
 
@@ -59,13 +60,13 @@ def run_clip(prefix, preliminary_result, _lambda_list):
     control_large = 5
     post_th = 0.05
     least_diff = 0.01
-    Lambda_list = _lambda_list
+    Lambda_list = [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25]
 
     # It is better to set # of cores = max_workers
     pool = ThreadPoolExecutor(max_workers=11)
     future_to_lambdas = []
     for Lambda in Lambda_list:
-        future_to_lambdas.append(pool.submit(clip_kernel, preliminary_result, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision,
-                    control_large, least_mut, post_th, least_diff, coef, wcut, purity))
+        future_to_lambdas.append(pool.submit(clip_kernel_nosub, preliminary_result, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision,
+                                             control_large, least_mut, post_th, least_diff, coef, wcut, purity))
 
     concurrent.futures.wait(future_to_lambdas,timeout=None,return_when=ALL_COMPLETED)

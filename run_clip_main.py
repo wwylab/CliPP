@@ -8,8 +8,9 @@ import shutil
 import time
 import threading
 
-from src.run_kernel_nosub import run_clip_nosub
-from src.run_kernel_sub import run_clip_sub
+sys.path.insert(0,"./src/")
+from run_kernel_nosub import run_clip_nosub
+from run_kernel_sub import run_clip_sub
 
 parser = argparse.ArgumentParser()
 
@@ -107,7 +108,7 @@ else:
 	if args.lam == None:
 
 		start = time.time()
-		t = threading.Thread(name="Running the main CliP function", target=run_clip_sub, args=(path_for_preprocess,path_for_preliminary,python_clip, args.subsample_size,
+		t = threading.Thread(name="Running the main CliP function", target=run_clip_sub, args=(path_for_preprocess, path_for_preliminary, python_clip, args.subsample_size,
 			args.rep_num, args.window_size, args.overlap_size))
 		
 		t.start()

@@ -16,13 +16,10 @@ import os
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, ALL_COMPLETED
-
 import numpy as np
-import ctypes
-## For parallel
-# mkl_rt = ctypes.CDLL('libmkl_rt.so')
-# mkl_get_max_threads = mkl_rt.mkl_get_max_threads
-# mkl_rt.mkl_set_num_threads(ctypes.byref(ctypes.c_int(16)))
+
+sys.path.insert(0,"./src/")
+
 from src.kernel import CliP
 
 sys.path.insert(0,sys.argv[3])
@@ -47,7 +44,7 @@ sys.argv = ['/Users/kaixiany/Working/CliP/Sample_data/intermediate/', '/Users/ka
 '''
 
 
-def clip_kernel_sub(preliminary_result, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef, wcut, purity):
+def clip_kernel_sub(preliminary_result,j, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef, wcut, purity):
     res = CliP(r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef, wcut, purity)
     labl = np.unique(res['label'])
     summary = np.zeros([len(labl), 3])
@@ -57,12 +54,8 @@ def clip_kernel_sub(preliminary_result, r, n, minor, total, ploidy, Lambda, alph
         summary[i, 2] = np.round(np.unique(res['phi'][np.where(res['label'] == labl[i])[0]])[0], 3)
         summary[i, 1] = len(np.where(res['label'] == labl[i])[0])
 
-    np.savetxt('%s/lam%s_phi.txt' % (preliminary_result, str(Lambda)), res['phi'], fmt='%.3f', delimiter=',')
-    np.savetxt('%s/lam%s_label.txt' % (preliminary_result, str(Lambda)), res['label'], fmt='%d', delimiter=',')
-    np.savetxt('%s/lam%s_summary_table.txt' % (preliminary_result, str(Lambda)), summary, fmt='%d\t%d\t%.3f')
+    np.savetxt('%s/lam%s_rep%s.txt' % (preliminary_result, str(Lambda), str(j)), summary, fmt='%d\t%d\t%.3f')
     return 1
-
-
 
 
 def run_clip_sub(prefix, preliminary_result, _lambda_list, No_subsampling, rep, window_size, overlap):
@@ -131,7 +124,7 @@ def run_clip_sub(prefix, preliminary_result, _lambda_list, No_subsampling, rep, 
         pool = ThreadPoolExecutor(max_workers=11)
         future_to_lambdas = []
         for Lambda in Lambda_list:
-            future_to_lambdas.append(pool.submit(clip_kernel_sub, preliminary_result, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision,
+            future_to_lambdas.append(pool.submit(clip_kernel_sub, preliminary_result,j, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision,
                                              control_large, least_mut, post_th, least_diff, coef, wcut, purity))
 
         concurrent.futures.wait(future_to_lambdas,timeout=None,return_when=ALL_COMPLETED)

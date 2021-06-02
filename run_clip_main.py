@@ -75,14 +75,14 @@ if args.subsampling == False:
 			sys.exit()
 		
 		# The lambda selection methods:
-		p_lambda_selection = subprocess.Popen(["python", run_lambda_selection, args.purity_input, path_for_final], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		p_lambda_selection = subprocess.Popen(["python3", run_lambda_selection, args.purity_input, path_for_final], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		_stdout, _stderr = p_lambda_selection.communicate()
 		if _stderr:
 			print(_stderr.decode().strip())
 			sys.exit()
 		
 	else:
-		p_run_CliP = subprocess.Popen(["python", run_CliP, path_for_preprocess, path_for_preliminary, python_clip, str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		p_run_CliP = subprocess.Popen(["python3", run_CliP, path_for_preprocess, path_for_preliminary, python_clip, str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		_stdout, _stderr = p_run_CliP.communicate()
 		if _stderr:
 			print(_stderr.decode().strip())
@@ -125,14 +125,14 @@ else:
 			sys.exit()
 		
 		# The lambda selection methods:
-		p_lambda_selection = subprocess.Popen(["python", run_lambda_selection, args.purity_input, path_for_final], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		p_lambda_selection = subprocess.Popen(["python3", run_lambda_selection, args.purity_input, path_for_final], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		_stdout, _stderr = p_lambda_selection.communicate()
 		if _stderr:
 			print(_stderr.decode().strip())
 			sys.exit()
 		
 	else:
-		p_run_subsampling = subprocess.Popen(["python", subsampling_clip, path_for_preprocess, path_for_preliminary, python_clip, str(args.subsample_size), str(args.rep_num), str(args.window_size), str(args.overlap_size), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		p_run_subsampling = subprocess.Popen(["python3", subsampling_clip, path_for_preprocess, path_for_preliminary, python_clip, str(args.subsample_size), str(args.rep_num), str(args.window_size), str(args.overlap_size), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		_stdout, _stderr = p_run_subsampling.communicate()
 		if _stderr:
 			print(_stderr.decode().strip())

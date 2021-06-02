@@ -52,7 +52,7 @@ A simulated sample input data is under `sample/`.
 
 The caller function `run_clip_main.py` wraps up the CliP pipeline and enables users to implement subclonal reconstruction in one-step. To try CliP with our sample input, you may run:
 ```
-python run_clip_main.py sample/sample.snv.txt sample/sample.cna.txt sample/sample.purity.txt
+python3 run_clip_main.py sample/sample.snv.txt sample/sample.cna.txt sample/sample.purity.txt
 ````
 
 A full manual is as follows:

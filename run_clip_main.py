@@ -8,8 +8,9 @@ import shutil
 import time
 import threading
 
-from src.run_kernel_nosub import run_clip_nosub
-from src.run_kernel_sub import run_clip_sub
+sys.path.insert(0,"./src/")
+from run_kernel_nosub import run_clip_nosub
+from run_kernel_sub import run_clip_sub
 
 parser = argparse.ArgumentParser()
 

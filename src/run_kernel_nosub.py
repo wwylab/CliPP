@@ -19,6 +19,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, ALL_COMPLETED
 import numpy as np
 from numpy import genfromtxt
+
+sys.path.insert(0,"./src/")
+
 from src.kernel import CliP
 
 def clip_kernel_nosub(preliminary_result, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef, wcut, purity):

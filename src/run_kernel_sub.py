@@ -16,13 +16,10 @@ import os
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, ALL_COMPLETED
-
 import numpy as np
-import ctypes
-## For parallel
-# mkl_rt = ctypes.CDLL('libmkl_rt.so')
-# mkl_get_max_threads = mkl_rt.mkl_get_max_threads
-# mkl_rt.mkl_set_num_threads(ctypes.byref(ctypes.c_int(16)))
+
+sys.path.insert(0,"./src/")
+
 from src.kernel import CliP
 
 sys.path.insert(0,sys.argv[3])

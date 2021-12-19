@@ -115,6 +115,9 @@ if(length(args) < 5){
             pooled.pssm[[1]]<- pooled.pssm[[1]][-ccf.ind]
           }
         } else{
+	  consensus.ccf <- lapply(pooled.beta,function(x){
+            return(list(center = 0, size= 0, cluster = 0))
+          })
           consensus.ccf[[1]]$center <- unique(pooled.beta[[1]])
           consensus.ccf[[1]]$cluster <- rep(1,length(pooled.beta[[1]]))
         }
@@ -422,6 +425,9 @@ if(length(args) < 5){
           pooled.pssm[[1]]<- pooled.pssm[[1]][-ccf.ind]
         }
       } else{
+	consensus.ccf <- lapply(pooled.beta,function(x){
+          return(list(center = 0, size= 0, cluster = 0))
+        })
         consensus.ccf[[1]]$center <- unique(pooled.beta[[1]])
         consensus.ccf[[1]]$cluster <- rep(1,length(pooled.beta[[1]]))
       }

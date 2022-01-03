@@ -17,7 +17,8 @@ preprocessed.prefix <- args[2]
 output.prefix       <- args[3]
 filtering           <- as.numeric(args[4])
 threshold           <- 0.1
-clonalFrac          <- 0.3
+clonalFrac          <- 0.15
+clonalFrac_superCluster <- 0.4
 least.ratio         <- 0.05
 SAFETY              <- 0.05
 N.REP               <- 30
@@ -170,7 +171,7 @@ if(length(args) < 5){
         refine <- F
         No.cls <- dim(suma)[1]
         # filter 1: super clusters
-        if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac){
+        if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac_superCluster){
           refine <- T
         }
         while(refine){
@@ -193,7 +194,7 @@ if(length(args) < 5){
                                      function(y){
                                        length(which(label == y))
                                      }))
-          if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac){
+          if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac_superCluster){
             refine <- T
           }
         }
@@ -480,7 +481,7 @@ if(length(args) < 5){
       refine <- F
       No.cls <- dim(suma)[1]
       # filter 1: super clusters
-      if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac){
+      if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac_superCluster){
         refine <- T
       }
       while(refine){
@@ -503,7 +504,7 @@ if(length(args) < 5){
                                    function(y){
                                      length(which(label == y))
                                    }))
-        if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac){
+        if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac_superCluster){
           refine <- T
         }
       }

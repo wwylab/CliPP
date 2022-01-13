@@ -4,7 +4,6 @@
 # and make some further filtering which may not be necessary and you can turn them off by setting filtering to 0.
 # Typically you do not need to do the filtering, but when the average coverage is low, say 30-40X, you may want to do this extra filtering.
 # Authors: Kaixian Yu, Yujie Jiang
-# Last updated: 04/02/2021
 # Email: yujiejiang679@gmail.com
 #------------------------------------------------------------# 
 # The script takes commandline arguments: CliP_results_dir preprocessed_output_dir Output_dir filtering_flag lambda
@@ -29,7 +28,9 @@ if(!dir.exists(output.prefix)){
 	dir.create(output.prefix)
 }
 
+# If user does not specify the lambda value 
 if(length(args) < 5){
+  # Loop over all 11 lambda values in the default lambda list
   for (lam in Lambda_list){
     outfile1 <- sprintf("%s/lam%s_phi.txt", input.prefix, lam)
     outfile2 <- sprintf("%s/lam%s_label.txt", input.prefix, lam)
@@ -65,6 +66,7 @@ if(length(args) < 5){
       phi <- unlist(read.table(outfile1,header=F))
       cluster.phi <- unique(phi)
       
+      # If doing subsampling
     } else if (length(ifsubsample) >0){
       tmp <- lapply(ifsubsample,function(x){read.table(x,header=F, sep="\t")})
       if(ncol(tmp[[1]])<3){
@@ -148,7 +150,8 @@ if(length(args) < 5){
       stop(sprintf('No results found at the given location: %s', input.prefix))
     }
     
-    #### Some filtering ####
+    #### Start the filtering ####
+    # The updated postprocessing pipeline is in 4 steps
     suma <- matrix(0,ncol=3, nrow=length(cluster.phi))
     for(i in 1:length(cluster.phi)){
       suma[i,1] = all.label[i]
@@ -170,7 +173,9 @@ if(length(args) < 5){
         least.mut <- least.ratio * length(phi)
         refine <- F
         No.cls <- dim(suma)[1]
-        # filter 1: super clusters
+        # filter 1: Deal with superclusters
+        # If the max CP > 1 & the sample has > 2 clusters & the current clonal fraction <= 0.4:
+        # Merge the cluster with max CP with the cluster with the second largest CP
         if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac_superCluster){
           refine <- T
         }
@@ -199,7 +204,9 @@ if(length(args) < 5){
           }
         }
         
-        # filter 2: small clone
+        # filter 2: Deal with small clones:
+        # If the sample has > 2 clusters & the current clonal fraction <= 0.15:
+        # Merge the cluster with max CP with the cluster with the second largest CP
         if(suma[No.cls,2] / sum(suma[,2]) < clonalFrac && No.cls > 2){
           refine <- T
         }
@@ -227,7 +234,9 @@ if(length(args) < 5){
             refine <- T
           }
         }
-        # filter 3: too close
+        # filter 3: Deal with adjacent clusters:
+        # If the sample has > 2 clusters & if CP values between any two clusters < 0.1
+        # Merge those two clusters together
         if( No.cls > 2 ){
           diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
           if(min(diff) < threshold ){
@@ -264,7 +273,9 @@ if(length(args) < 5){
           
           
         }
-        #### filter 4: small subclone (as defined by at least least.mut mutations)
+        # filter 4: Deal with small subclones (as defined by at least least.mut mutations):
+        # If a subclone has #SNV < 0.05 * total mutaton
+        # Merge this subclone with its closest cluster
         if( length(which(suma[,2]<= least.mut)) > 0  && No.cls > 2 && which(suma[,2]<= least.mut)[1] != nrow(suma)){
           refine <- T
         }
@@ -339,7 +350,7 @@ if(length(args) < 5){
     }   
   }
   
-} else{
+} else{ # If user specifies the lambda value 
   lam  <- args[5]
   outfile1 <- sprintf("%s/lam%s_phi.txt", input.prefix, lam)
   outfile2 <- sprintf("%s/lam%s_label.txt", input.prefix, lam)
@@ -375,6 +386,7 @@ if(length(args) < 5){
     phi <- unlist(read.table(outfile1,header=F))
     cluster.phi <- unique(phi)
     
+    # If doing subsampling
   } else if (length(ifsubsample) >0){
     tmp <- lapply(ifsubsample,function(x){read.table(x,header=F, sep="\t")})
     if(ncol(tmp[[1]])<3){
@@ -458,7 +470,8 @@ if(length(args) < 5){
     stop(sprintf('No results found at the given location: %s', input.prefix))
   }
   
-  #### Some filtering ####
+  #### Start the filtering ####
+  # The updated postprocessing pipeline is in 4 steps
   suma <- matrix(0,ncol=3, nrow=length(cluster.phi))
   for(i in 1:length(cluster.phi)){
     suma[i,1] = all.label[i]
@@ -480,7 +493,9 @@ if(length(args) < 5){
       least.mut <- least.ratio * length(phi)
       refine <- F
       No.cls <- dim(suma)[1]
-      # filter 1: super clusters
+      # filter 1: Deal with superclusters
+      # If the max CP > 1 & the sample has > 2 clusters & the current clonal fraction <= 0.4:
+      # Merge the cluster with max CP with the cluster with the second largest CP
       if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac_superCluster){
         refine <- T
       }
@@ -509,7 +524,9 @@ if(length(args) < 5){
         }
       }
       
-      # filter 2: small clone
+      # filter 2: Deal with small clones:
+      # If the sample has > 2 clusters & the current clonal fraction <= 0.15:
+      # Merge the cluster with max CP with the cluster with the second largest CP
       if(suma[No.cls,2] / sum(suma[,2]) < clonalFrac && No.cls > 2){
         refine <- T
       }
@@ -537,7 +554,9 @@ if(length(args) < 5){
           refine <- T
         }
       }
-      # filter 3: too close
+      # filter 3: Deal with adjacent clusters:
+      # If the sample has > 2 clusters & if CP values between any two clusters < 0.1
+      # Merge those two clusters together
       if( No.cls > 2 ){
         diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
         if(min(diff) < threshold ){
@@ -574,7 +593,9 @@ if(length(args) < 5){
         
         
       }
-      #### filter 4: small subclone (as defined by at least least.mut mutations)
+      # filter 4: Deal with small subclones (as defined by at least least.mut mutations):
+      # If a subclone has #SNV < 0.05 * total mutaton
+      # Merge this subclone with its closest cluster
       if( length(which(suma[,2]<= least.mut)) > 0  && No.cls > 2 && which(suma[,2]<= least.mut)[1] != nrow(suma)){
         refine <- T
       }

@@ -16,6 +16,7 @@ from shutil import copyfile
 from itertools import repeat
 import operator 
 
+# The 11 lambda values in the default lambda list
 Lambda_list = [0.01,0.03,0.05,0.075,0.1,0.125,0.15,0.175,0.2,0.225,0.25]
 
 purity_file = sys.argv[1]
@@ -26,9 +27,12 @@ for i in range(11):
     datafile = pd.read_csv(os.path.join(final_result, "subclonal_structure_lam%s.txt" % (Lambda_list[i])), sep = "\t")
     max_cp_value = max(datafile["cellular_prevalence"])
     purity_value = pd.read_csv(purity_file, sep="\t", header=None)[0][0]
+    # Filter 1: Drop the output with corresponding lambda value if the difference between its max CP value and input purity is >1% 
     if abs(max_cp_value - purity_value)/purity_value < 0.01:
         passed_lambda.append(Lambda_list[i])
+# If not all lambdas are dropped
 if len(passed_lambda) > 0:
+    # Select the output given by the largest lambda in the current list
     selected_lambda = max(passed_lambda) 
     source_1 = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (selected_lambda))
     source_2 = os.path.join(final_result, "mutation_assignments_lam%s.txt" % (selected_lambda))
@@ -38,6 +42,7 @@ if len(passed_lambda) > 0:
     shutil.copy(source_1, destination) 
     shutil.copy(source_2, destination) 
 
+# If none of the lambdas pass filter 1
 if len(passed_lambda) == 0:
     lam_rev = [0.25,0.225,0.2,0.175,0.15,0.125,0.1,0.075,0.05,0.03,0.01]
     
@@ -49,6 +54,7 @@ if len(passed_lambda) == 0:
         purity_value = pd.read_csv(purity_file, sep="\t", header=None)[0][0]
         value = abs(max_cp_value - purity_value)/purity_value
         lst_value.append(value)
+    # Select the output given by the lambda that returns the smallest difference between its max CP value and input purity
     lst_pos = lst_value.index(min(lst_value))
     lam_pos = lam_rev[lst_pos]   
     source_1 = os.path.join(final_result, "subclonal_structure_lam%s.txt" % (lam_pos))

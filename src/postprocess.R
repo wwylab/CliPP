@@ -1,14 +1,31 @@
 #------------------------------------------------------------#
-# This script takes care of the postprocessing for CliP
-# the postprocessing mostly taking care of the hamonization of the results for both downsampled/non-downsampled
-# and make some further filtering which may not be necessary and you can turn them off by setting filtering to 0.
-# Typically you do not need to do the filtering, but when the average coverage is low, say 30-40X, you may want to do this extra filtering.
+# This script takes care of the postprocessing for CliP.
+# The postprocessing procedure mostly takes care of the harmonization of the results from penalized model.
 # Authors: Kaixian Yu, Yujie Jiang
-# Email: yujiejiang679@gmail.com
+# Email: yjiang13@mdanderson.org
 #------------------------------------------------------------# 
-# The script takes commandline arguments: CliP_results_dir preprocessed_output_dir Output_dir filtering_flag lambda
-# The results folder should contain results for only one sample and the non-downsampled version is always given higher priority. 
-# The postprocessing is done per lam, the results of the same sample for different lambda can be stored in the same folder.
+
+#------------------------------------------------------------#
+# Terminologies used:
+# CP: cellular prevalence
+# CCF: cancer cell fraction, which is the proportion of tumor cells bearing the mutation
+# Clonal mutation: mutations belonging to the initiating tumor cell and are expected to occur in every cell in the tumor
+# Subclonal mutation: mutations which arose in descendant subpopulations
+# Clonal fraction: number of clonal mutation divided by the number of total mutation
+# Subclonal fraction: number of subclonal mutation divided by the number of total mutation
+# Super cluster: a clone with CCF > 1, may indicate germline contamination or purity estimation errors
+#------------------------------------------------------------#
+
+#------------------------------------------------------------#
+# Subjective variables:
+# threshold: controls the lower limit of CP difference between any two clusters
+# clonalFrac: controls the lower limit of clonal cluster in terms of percentage of mutations
+# clonalFrac_superCluster: controls the lower limit of clonal super cluster in terms of percentage of mutations
+# least.ratio: controls the lower limit of cluster size in terms of percentage of mutations 
+#------------------------------------------------------------#
+
+
+
 args <- commandArgs(trailingOnly = T)
 library(parallel)
 input.prefix        <- args[1]
@@ -32,6 +49,7 @@ if(!dir.exists(output.prefix)){
 if(length(args) < 5){
   # Loop over all 11 lambda values in the default lambda list
   for (lam in Lambda_list){
+    # Extract the output data
     outfile1 <- sprintf("%s/lam%s_phi.txt", input.prefix, lam)
     outfile2 <- sprintf("%s/lam%s_label.txt", input.prefix, lam)
     outfile3 <- sprintf("lam%s_rep", lam)
@@ -151,7 +169,7 @@ if(length(args) < 5){
     }
     
     #### Start the filtering ####
-    # The updated postprocessing pipeline is in 4 steps
+    # The updated postprocessing pipeline includes 4 steps
     suma <- matrix(0,ncol=3, nrow=length(cluster.phi))
     for(i in 1:length(cluster.phi)){
       suma[i,1] = all.label[i]
@@ -173,9 +191,9 @@ if(length(args) < 5){
         least.mut <- least.ratio * length(phi)
         refine <- F
         No.cls <- dim(suma)[1]
-        # filter 1: Deal with superclusters
+        # Filter 1: deal with superclusters
         # If the max CP > 1 & the sample has > 2 clusters & the current clonal fraction <= 0.4:
-        # Merge the cluster with max CP with the cluster with the second largest CP
+        # Merge the two clusters with the largest CP values
         if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac_superCluster){
           refine <- T
         }
@@ -204,9 +222,9 @@ if(length(args) < 5){
           }
         }
         
-        # filter 2: Deal with small clones:
+        # Filter 2: deal with small clones, i.e., the clonal cluster has a small number of mutations
         # If the sample has > 2 clusters & the current clonal fraction <= 0.15:
-        # Merge the cluster with max CP with the cluster with the second largest CP
+        # Merge the two clusters with the largest CP values
         if(suma[No.cls,2] / sum(suma[,2]) < clonalFrac && No.cls > 2){
           refine <- T
         }
@@ -234,7 +252,7 @@ if(length(args) < 5){
             refine <- T
           }
         }
-        # filter 3: Deal with adjacent clusters:
+        # Filter 3: deal with adjacent clusters, i.e., cluster with similar CP values
         # If the sample has > 2 clusters & if CP values between any two clusters < 0.1
         # Merge those two clusters together
         if( No.cls > 2 ){
@@ -273,7 +291,7 @@ if(length(args) < 5){
           
           
         }
-        # filter 4: Deal with small subclones (as defined by at least least.mut mutations):
+        # Filter 4: deal with small subclones, i.e., subclonal clusters with a small number of mutations
         # If a subclone has #SNV < 0.05 * total mutaton
         # Merge this subclone with its closest cluster
         if( length(which(suma[,2]<= least.mut)) > 0  && No.cls > 2 && which(suma[,2]<= least.mut)[1] != nrow(suma)){
@@ -493,9 +511,9 @@ if(length(args) < 5){
       least.mut <- least.ratio * length(phi)
       refine <- F
       No.cls <- dim(suma)[1]
-      # filter 1: Deal with superclusters
+      # Filter 1: deal with superclusters
       # If the max CP > 1 & the sample has > 2 clusters & the current clonal fraction <= 0.4:
-      # Merge the cluster with max CP with the cluster with the second largest CP
+      # Merge the two clusters with the largest CP values
       if(max(suma[, 3]) > 1 && No.cls > 2 && suma[No.cls,2] / sum(suma[,2]) < clonalFrac_superCluster){
         refine <- T
       }
@@ -524,9 +542,9 @@ if(length(args) < 5){
         }
       }
       
-      # filter 2: Deal with small clones:
+      # Filter 2: deal with small clones, i.e., the clonal cluster has a small number of mutations
       # If the sample has > 2 clusters & the current clonal fraction <= 0.15:
-      # Merge the cluster with max CP with the cluster with the second largest CP
+      # Merge the two clusters with the largest CP values
       if(suma[No.cls,2] / sum(suma[,2]) < clonalFrac && No.cls > 2){
         refine <- T
       }
@@ -554,7 +572,7 @@ if(length(args) < 5){
           refine <- T
         }
       }
-      # filter 3: Deal with adjacent clusters:
+      # Filter 3: deal with adjacent clusters, i.e., cluster with similar CP values
       # If the sample has > 2 clusters & if CP values between any two clusters < 0.1
       # Merge those two clusters together
       if( No.cls > 2 ){
@@ -593,7 +611,7 @@ if(length(args) < 5){
         
         
       }
-      # filter 4: Deal with small subclones (as defined by at least least.mut mutations):
+      # Filter 4: deal with small subclones, i.e., subclonal clusters with a small number of mutations
       # If a subclone has #SNV < 0.05 * total mutaton
       # Merge this subclone with its closest cluster
       if( length(which(suma[,2]<= least.mut)) > 0  && No.cls > 2 && which(suma[,2]<= least.mut)[1] != nrow(suma)){

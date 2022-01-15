@@ -1,12 +1,12 @@
 #------------------------------------------------------------#
 # This script takes care of the postprocessing for CliP.
-# The postprocessing procedure mostly takes care of the harmonization of the results from penalized model.
+# The postprocessing procedure mostly takes care of the harmonization of the results from the penalized model.
 # Authors: Kaixian Yu, Yujie Jiang
 # Email: yjiang13@mdanderson.org
 #------------------------------------------------------------# 
 
 #------------------------------------------------------------#
-# Terminologies used:
+# Notation:
 # CP: cellular prevalence
 # CCF: cancer cell fraction, which is the proportion of tumor cells bearing the mutation
 # Clonal mutation: mutations belonging to the initiating tumor cell and are expected to occur in every cell in the tumor

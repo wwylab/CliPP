@@ -1,9 +1,29 @@
-'''----------------------------------------------------------------------
-This script is a rule of thumb method to select one preferable penalty parameter (lambda)
-when you run CliP with multiple lambdas.
-By default the Lambda_list takes value of [0.01,0.03,0.05,0.075,0.1,0.125,0.15,0.175,0.2,0.225,0.25]
-----------------------------------------------------------------------
-'''
+#------------------------------------------------------------#
+# Given the fact that there is a hyper-parameter lambda in our model, its selection is important for
+# finding a balance between over- and under-fitting. The size of lambda controls the number of clusters. In
+# general, higher lambda values return fewer clusters. We introduce a selection approach, which focuses on
+# the match of clonal mutations, rather than a perfect match of the overall structure. 
+
+# This script is a rule of thumb method to select one lambda when you run CliP with multiple lambdas.
+#------------------------------------------------------------#
+
+#------------------------------------------------------------#
+# The automated lambda selection pipeline is as follows: 
+# 1) Run CliP with 11 different lambda: [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25]. 
+# 2) For each sample, compute a score: A = |(max(CP)−purity)/purity|. 
+# If there are one or more results that satisfy A < 0.01, we select the largest lambda associated with those results. 
+# If all scores A are greater than 0.01, we choose the lambda associated with the smallest A.
+#------------------------------------------------------------#
+
+#------------------------------------------------------------#
+# Notation:
+# CP: cellular prevalence
+# CCF: cancer cell fraction, which is the proportion of tumor cells bearing the mutation
+# Clonal mutation: mutations belonging to the initiating tumor cell and are expected to occur in every cell in the tumor
+# Subclonal mutation: mutations which arose in descendant subpopulations
+# Clonal fraction: number of clonal mutation divided by the number of total mutation
+# Subclonal fraction: number of subclonal mutation divided by the number of total mutation
+#------------------------------------------------------------#
 
 import os
 import os.path

@@ -39,6 +39,7 @@ least.ratio         <- 0.05
 SAFETY              <- 0.05
 N.REP               <- 30
 RATIO.TH            <- 0.90
+# The 11 lambda values in the default lambda list
 Lambda_list = c(0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25)
 
 if(!dir.exists(output.prefix)){

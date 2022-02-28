@@ -137,9 +137,9 @@ if(No.cnLines == 0){
 mut.cna.id     <- unlist(lapply(1:No.mutations, function(x){
     ret.val <- -1
     for(i in 1:No.cnLines){
-        if( mutation.chrom[x] == cn.tmp[i, 1]
-            && mutation.pos[x] >= cn.tmp[i, 2]
-            && mutation.pos[x] <= cn.tmp[i, 3]){
+        if( mutation.chrom[x] == cn.tmp[i, "chromosome_index"]
+            && mutation.pos[x] >= cn.tmp[i, "start_position"]
+            && mutation.pos[x] <= cn.tmp[i, "end_position"]){
             ret.val <- i
             break
         }

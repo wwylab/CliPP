@@ -78,7 +78,7 @@ CombineReasons <- function(chrom, pos, ind, reason){
     res <- NULL
     if(length(ind) > 0){
         for (i in (1:length(ind))){
-            res[i] <- sprintf("%d\t%d\t%s",chrom[i],pos[i],reason)
+            res[i] <- sprintf("%d\t%d\t%s",chrom[ind[i]],pos[ind[i]],reason)
         }
     }
     return(res)

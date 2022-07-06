@@ -1,16 +1,21 @@
-import argparse
 import sys
 import os
-from os import listdir
-import json
+
+if not (sys.version_info[0] == 3 and sys.version_info[1] >= 5 and sys.version_info[2] >= 1):
+    sys.stderr.write("Error message: CliP can only run with python >=3.5.1\n")
+    sys.exit(-1)
+
+import argparse
 import subprocess
 import shutil
 import time
-import threading
 
-sys.path.insert(0,"./src/")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(current_dir, "src"))
+
 from run_kernel_nosub import run_clip_nosub
 from run_kernel_sub import run_clip_sub
+from penalty_selection import run_lambda_selection
 
 parser = argparse.ArgumentParser()
 
@@ -30,123 +35,132 @@ parser.add_argument("-o", "--overlap_size", type=float, default=0.0, help="Contr
 
 args = parser.parse_args()
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
 run_preprocess = os.path.join(current_dir, "src/preprocess.R")
+sample_id = args.sample_id
+sample_id = sample_id.strip()
+final_result = args.final.strip()
 
-result_dir = os.path.join(current_dir, args.sample_id)
+if sample_id == "":
+	sys.stderr.write("User specified sample id is empty. Use default sample_id instead.\n")
+	sample_id = "sample_id"
+
+if final_result == "":
+    sys.stderr.write("User specified final is empty. Use default final_result instead.\n")
+    final_result = "final_result"
+
+if args.subsampling:
+    if args.subsample_size is None:
+        sys.stderr.write("Please specify subsample_size\n")
+        sys.exit(-1)
+        
+    if args.rep_num is None:
+        sys.stderr.write("Please specify rep_num\n")
+        sys.exit(-1)
+        
+
+lambda_list = [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25]
+if args.lam is not None:
+    try:  
+        lambda_list = [float(args.lam)]
+    except Exception as err:
+        sys.stderr.write(err)
+        sys.exit(-1)
+
+result_dir = os.path.join(current_dir, sample_id)
 if not os.path.exists(result_dir):
-	os.makedirs(result_dir)
+    os.makedirs(result_dir)
 
 path_for_preprocess = os.path.join(result_dir, args.preprocess)
 path_for_preliminary = os.path.join(result_dir, "preliminary_result")
-path_for_final = os.path.join(result_dir, args.final)
+path_for_final = os.path.join(result_dir, final_result)
 
-# Run preprocess
+# Run preprocessing
 print("Running preprocessing...")
-p_preprocess = subprocess.Popen(["Rscript", run_preprocess, args.snv_input, args.cn_input, args.purity_input, args.sample_id, path_for_preprocess], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+p_preprocess = subprocess.Popen(["Rscript", 
+                                 run_preprocess, 
+                                 args.snv_input, 
+                                 args.cn_input, 
+                                 args.purity_input, 
+                                 args.sample_id, 
+                                 path_for_preprocess], 
+                                stdout=subprocess.PIPE, 
+                                stderr=subprocess.PIPE)
+
 _stdout, _stderr = p_preprocess.communicate()
-if _stderr:
+
+print(_stderr)
+if "error" in _stderr.decode().strip().lower():
 	print(_stderr.decode().strip())
-	sys.exit()
+	sys.exit(-1)
 print("Preprocessing finished.")
 
-run_CliP = os.path.join(current_dir, "src/run_kernel_nosub.py")
-python_clip = os.path.join(current_dir, "src/kernel.py")
 run_postprocess = os.path.join(current_dir, "src/postprocess.R")
-run_lambda_selection = os.path.join(current_dir, "src/penalty_selection.py")
+# run_lambda_selection = os.path.join(current_dir, "src/penalty_selection.py")
 
 # Run the main CliP function (without subsampling)
 print("Running the main CliP function...")
-if args.subsampling == False:
-	if args.lam == None:
-		start = time.time()
-		t = threading.Thread(name="Running the main CliP function", target=run_clip_nosub, args=(path_for_preprocess, path_for_preliminary))
-		t.start()
-		t.join()
-		end = time.time()
-		elapsed_time = end - start
-		print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
-		
-		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(1)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		_stdout, _stderr = p_postprocess.communicate()
-		if _stderr:
-			print(_stderr.decode().strip())
-			sys.exit()
-		
-		# The lambda selection methods:
-		p_lambda_selection = subprocess.Popen(["python3", run_lambda_selection, args.purity_input, path_for_final], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		_stdout, _stderr = p_lambda_selection.communicate()
-		if _stderr:
-			print(_stderr.decode().strip())
-			sys.exit()
-		
-	else:
-		p_run_CliP = subprocess.Popen(["python3", run_CliP, path_for_preprocess, path_for_preliminary, python_clip, str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		_stdout, _stderr = p_run_CliP.communicate()
-		if _stderr:
-			print(_stderr.decode().strip())
-			sys.exit()
-		
-		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(1), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		_stdout, _stderr = p_postprocess.communicate()
-		if _stderr:
-			print(_stderr.decode().strip())
-			sys.exit()
-
-			
-# Run the main CliP function (with subsampling)
-else:
-	subsampling_clip = os.path.join(current_dir, "src/run_kernel_sub.py")
-	if args.subsample_size == None:
-		sys.exit("Need an input for subsample_size")
-		
-	if args.rep_num == None:
-		sys.exit("Need an input for rep_num")
+if not args.subsampling:
+	start = time.time()
+	run_clip_nosub(path_for_preprocess, path_for_preliminary, lambda_list)
+	end = time.time()
+	elapsed_time = end - start
+	print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
 	
-	if args.lam == None:
+	# Run postprocessing
+	p_postprocess = subprocess.Popen(["Rscript", 
+                                   run_postprocess, 
+                                   path_for_preliminary, 
+                                   path_for_preprocess, 
+                                   path_for_final, 
+                                   str(1)], 
+                                  stdout=subprocess.PIPE, 
+                                  stderr=subprocess.PIPE)
+ 
+	_stdout, _stderr = p_postprocess.communicate()
+	
+	if "error" in _stderr.decode().strip().lower():
+		print(_stderr.decode().strip())
+		sys.exit(-1)
+		
+	# The lambda selection methods:
+	if args.lam is None:
+		run_lambda_selection(args.purity_input, path_for_final)
 
-		start = time.time()
-		t = threading.Thread(name="Running the main CliP function", target=run_clip_sub, args=(path_for_preprocess, path_for_preliminary, python_clip, args.subsample_size,
-			args.rep_num, args.window_size, args.overlap_size))
-		
-		t.start()
-		t.join()
-		end = time.time()
-		elapsed_time = end - start
-		print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
-		
-		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(1)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		_stdout, _stderr = p_postprocess.communicate()
-		if _stderr:
-			print(_stderr.decode().strip())
-			sys.exit()
-		
-		# The lambda selection methods:
-		p_lambda_selection = subprocess.Popen(["python3", run_lambda_selection, args.purity_input, path_for_final], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		_stdout, _stderr = p_lambda_selection.communicate()
-		if _stderr:
-			print(_stderr.decode().strip())
-			sys.exit()
-		
-	else:
-		p_run_subsampling = subprocess.Popen(["python3", subsampling_clip, path_for_preprocess, path_for_preliminary, python_clip, str(args.subsample_size), str(args.rep_num), str(args.window_size), str(args.overlap_size), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		_stdout, _stderr = p_run_subsampling.communicate()
-		if _stderr:
-			print(_stderr.decode().strip())
-			sys.exit()
-		
-		# Run postprocess
-		p_postprocess = subprocess.Popen(["Rscript", run_postprocess, path_for_preliminary, path_for_preprocess, path_for_final, str(1), str(args.lam)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		_stdout, _stderr = p_postprocess.communicate()
-		if _stderr:
-			print(_stderr.decode().strip())
-			sys.exit()
-
-shutil.rmtree(path_for_preliminary)
-
+# Run the main CliP function (with subsampling)
+else:    
+    start = time.time()
+    run_clip_sub(path_for_preprocess, 
+              path_for_preliminary, 
+              lambda_list,
+              args.subsample_size,
+              args.rep_num, 
+              args.window_size, 
+              args.overlap_size)
+ 
+    end = time.time()
+    elapsed_time = end - start
+    print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
+    
+    # Run postprocessing
+    p_postprocess = subprocess.Popen(["Rscript", 
+                                      run_postprocess, 
+                                      path_for_preliminary, 
+                                      path_for_preprocess, 
+                                      path_for_final, str(1)], 
+                                     stdout=subprocess.PIPE, 
+                                     stderr=subprocess.PIPE)
+    _stdout, _stderr = p_postprocess.communicate()
+    if "error" in _stderr.decode().strip().lower():
+        print(_stderr.decode().strip())
+        sys.exit(-1)
+        
+    # The lambda selection methods:
+    if args.lam is None:
+        run_lambda_selection(args.purity_input, path_for_final)
+  
+try:
+    shutil.rmtree(path_for_preliminary)
+except:
+    pass
+    
 print("Main CliP function finished.")
-
-

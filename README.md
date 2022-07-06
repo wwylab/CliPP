@@ -6,6 +6,9 @@ Subpopulations of tumor cells characterized by mutation profiles may confer diff
 
 
 ## Prerequisites
+- MacOS or Linux 
+  - If MacOS, CliP only runs with one core due to a lack of support of OpenMP on this OS.
+  - If Linux, CliP requires OpenMP for paralell computing. For instruction on how to install OpenMP, please check the instruction at http://bioinformatics.mdanderson.org/Software/DeMixT/HowtoinstallOpenMP.docx.
 - R [>3.3.1]
 - python [>3.5.1]
 - NumPy
@@ -16,6 +19,8 @@ Subpopulations of tumor cells characterized by mutation profiles may confer diff
 ```
 git clone https://github.com/wwylab/CliP.git
 cd CliP
+
+python setup.py build
 ```
 
 ## Structure of CliP implementation
@@ -52,7 +57,7 @@ A simulated sample input data is under `sample/`.
 
 The caller function `run_clip_main.py` wraps up the CliP pipeline and enables users to implement subclonal reconstruction in one-step. To try CliP with our sample input, you may run:
 ```
-python3 run_clip_main.py sample/sample.snv.txt sample/sample.cna.txt sample/sample.purity.txt
+python run_clip_main.py sample/sample.snv.txt sample/sample.cna.txt sample/sample.purity.txt
 ````
 
 A full manual is as follows:

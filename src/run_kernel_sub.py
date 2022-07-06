@@ -11,23 +11,17 @@ This script takes the following argument: path_to_input path_to_output path_to_c
 Debug use
 sys.argv = ['/Users/kaixiany/Working/CliP/Sample_data/intermediate/', '/Users/kaixiany/Working/CliP/Sample_data/results/', '/Users/kaixiany/Working/CliP/', '1.5', '1500', '1', '0.05', '0']
 '''
-import concurrent
 import os
 import sys
-import time
-from concurrent.futures import ThreadPoolExecutor, ALL_COMPLETED
 import numpy as np
-
-sys.path.insert(0,"./src/")
-
-from src.kernel import CliP
-
-sys.path.insert(0,sys.argv[3])
 from numpy import genfromtxt
-prefix = sys.argv[1]
+import ctypes
+import glob
 
-if not os.path.exists(sys.argv[2]):
-    os.makedirs(sys.argv[2])
+#prefix = sys.argv[1]
+
+#if not os.path.exists(sys.argv[2]):
+#    os.makedirs(sys.argv[2])
 
 '''----------------------------------------------------------------------
 This script takes care of the running of CliP
@@ -44,24 +38,26 @@ sys.argv = ['/Users/kaixiany/Working/CliP/Sample_data/intermediate/', '/Users/ka
 '''
 
 
-def clip_kernel_sub(preliminary_result,j, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef, wcut, purity):
-    res = CliP(r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef, wcut, purity)
-    labl = np.unique(res['label'])
-    summary = np.zeros([len(labl), 3])
-
-    for i in range(len(labl)):
-        summary[i, 0] = labl[i]
-        summary[i, 2] = np.round(np.unique(res['phi'][np.where(res['label'] == labl[i])[0]])[0], 3)
-        summary[i, 1] = len(np.where(res['label'] == labl[i])[0])
-
-    np.savetxt('%s/lam%s_rep%s.txt' % (preliminary_result, str(Lambda), str(j)), summary, fmt='%d\t%d\t%.3f')
-    return 1
-
-
-def run_clip_sub(prefix, preliminary_result, _lambda_list, No_subsampling, rep, window_size, overlap):
+def run_clip_sub(prefix, preliminary_result, Lambda_list, No_subsampling, rep, window_size, overlap):
     if not os.path.exists(preliminary_result):
         os.makedirs(preliminary_result)
 
+    current_folder = os.path.dirname(os.path.abspath(__file__))
+    clip_lib_path = glob.glob(os.path.join(current_folder, "../build/*/CliP*%s*.so" %(sys.platform)))
+    if not clip_lib_path:
+        sys.stderr.write("Cannot find shared lib. Make sure run run python setup.py build first.\n")
+        sys.exit(0)
+
+    clip_lib_path = clip_lib_path[0]
+    if not os.path.isfile(clip_lib_path):
+        sys.stderr.write("Cannot find shared lib. Make sure run run python setup.py build first.\n")
+        sys.exit(0)
+        
+    clip_lib = ctypes.CDLL(clip_lib_path)
+
+    Lambda_num = len(Lambda_list)
+    Lambda_list = np.array(Lambda_list).astype(np.float64)
+    
     r_all = genfromtxt(os.path.join(prefix, "r.txt"), delimiter="\t")
     n_all = genfromtxt(os.path.join(prefix, "n.txt"), delimiter="\t")
     minor_all = genfromtxt(os.path.join(prefix, "minor.txt"), delimiter="\t")
@@ -94,6 +90,15 @@ def run_clip_sub(prefix, preliminary_result, _lambda_list, No_subsampling, rep, 
     sampling_proportion = No_subsampling / No_mutation_all
     SNVtoSample = [np.round(SNVcount[i] * sampling_proportion) for i in range(len(SNVcount))]
 
+    alpha = 0.8
+    gamma = 3.7
+    rho = 1.02
+    precision = 0.01
+    Run_limit = 1e4
+    control_large = 5
+    post_th = 0.05
+    least_diff = 0.01
+
     for j in range(1, rep + 1):
         np.random.seed(j)
         sample_index = [np.random.choice(index[i], int(SNVtoSample[i]), False) for i in
@@ -108,23 +113,77 @@ def run_clip_sub(prefix, preliminary_result, _lambda_list, No_subsampling, rep, 
         phicut = phicut_all[sample_index, :]
         No_mutation = len(r)
 
-        alpha = 0.8
-        gamma = 3.7
-        rho = 1.02
-        precision = 0.01
-        Run_limit = 1e4
-        control_large = 5
-        post_th = 0.05
-        least_diff = 0.01
         least_mut = np.ceil(0.05 * No_mutation)
-        Lambda_list = [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25]
         wcut = phicut
+        
+        r = r.astype(np.int32)
+        n = n.astype(np.int32)
+        minor = minor.astype(np.int32)
+        total = total.astype(np.int32)
+        coef = coef.flatten()
+        wcut = wcut.flatten()
+        
+        #ploidy = double(ploidy)
+        Run_limit = int(Run_limit)
+        least_mut = int(least_mut)
+        
+        coef = coef.astype(np.float64)
+        wcut = wcut.astype(np.float64)
+        
+        
+        clip_lib.CliP.restype = None
+        clip_lib.CliP.argtypes = [ctypes.c_int, 
+                                  np.ctypeslib.ndpointer(dtype=np.int32),
+                                  np.ctypeslib.ndpointer(dtype=np.int32),
+                                  np.ctypeslib.ndpointer(dtype=np.int32), 
+                                  np.ctypeslib.ndpointer(dtype=np.int32), 
+                                  ctypes.c_double,
+                                  np.ctypeslib.ndpointer(dtype=np.float64), 
+                                  ctypes.c_int, 
+                                  ctypes.c_double, 
+                                  ctypes.c_double, 
+                                  ctypes.c_double, 
+                                  ctypes.c_int, 
+                                  ctypes.c_double, 
+                                  ctypes.c_int,
+                                  ctypes.c_int, 
+                                  ctypes.c_double, 
+                                  ctypes.c_double, 
+                                  np.ctypeslib.ndpointer(dtype=np.float64), 
+                                  np.ctypeslib.ndpointer(dtype=np.float64), 
+                                  ctypes.c_double, 
+                                  ctypes.c_char_p]
+        
+        clip_lib.CliP(No_mutation, r, n, minor, total, ploidy,
+                Lambda_list, Lambda_num, alpha, rho, gamma, Run_limit, precision,
+                control_large, least_mut, post_th, least_diff,
+                coef, wcut, purity, preliminary_result.encode('utf-8'))
 
-        # It is better to set # of cores = max_workers
-        pool = ThreadPoolExecutor(max_workers=11)
-        future_to_lambdas = []
-        for Lambda in Lambda_list:
-            future_to_lambdas.append(pool.submit(clip_kernel_sub, preliminary_result,j, r, n, minor, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision,
-                                             control_large, least_mut, post_th, least_diff, coef, wcut, purity))
+        for _lambda in Lambda_list:
+            _phi_file_path = os.path.join(preliminary_result, "lam%s_phi.txt" %(_lambda))
+            _label_file_path = os.path.join(preliminary_result, "lam%s_label.txt" %(_lambda))
+            
+            _sum_old_file_path = os.path.join(preliminary_result, "lam%s_summary_table.txt" %(_lambda))
+            _sum_new_file_path = os.path.join(preliminary_result, "lam%s_rep%s.txt" %(_lambda, j))
+            
+            try:
+                os.remove(_phi_file_path)
+                os.remove(_label_file_path)
+                os.rename(_sum_old_file_path, _sum_new_file_path)
+            except Exception as err:
+                sys.stderr.write(err)
 
-        concurrent.futures.wait(future_to_lambdas,timeout=None,return_when=ALL_COMPLETED)
+        
+        
+if __name__ == "__main__":
+    root = "/Users/sji/Documents/Programming/CliP/"
+    sample_id = "sample_id"
+    preliminary_result = root + sample_id + "/preliminary_result/"
+    prefix = root + sample_id + "/preprocess_result/"
+    
+    Lambda_list = [0.01,0.03,0.05,0.075,0.1,0.125,0.15,0.175,0.2,0.225,0.25]
+    
+    run_clip_sub(prefix, preliminary_result, Lambda_list, 200, 3, 0.5, 0)
+    
+    
+    

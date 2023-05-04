@@ -206,6 +206,8 @@ int  CliPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_,
     double trace_g = 0.0;
     
     k = 0;
+    std::vector<int> problematic_snvs;
+    
     while(residual > precision && k < Run_limit){
 	k += 1;
 	std::cout << "\rLambda: " << Lambda << "\titeration: " << k << "\tresidual: " << residual << std::flush;
@@ -233,9 +235,21 @@ int  CliPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_,
 		tag2 = 0.0; tag4 = 1.0;
 	    }
 
+	    if(theta(i, 0) >= 1.0) {
+	      theta(i, 0) = 0.99;
+	      #pragma omp critical
+	      {
+		problematic_snvs.push_back(i);
+	      }
+	    }
+	    
+	    
 	    A(i, 0) = sqrt(n(i, 0)) * (tag1 * coef_1d(i * 6 + 1, 0) + tag2 * coef_1d(i * 6 + 5, 0) + tag3 * tag4 * coef_1d(i * 6 + 3, 0) - theta_hat(i, 0)) / (sqrt(theta(i, 0) * (1 - theta(i, 0))));
 	    B(i, 0) = sqrt(n(i, 0)) * (tag1 * coef_1d(i * 6 + 0, 0) + tag2 * coef_1d(i * 6 + 4, 0) + tag3 * tag4 * coef_1d(i * 6 + 2, 0)) / (sqrt(theta(i, 0) * (1 - theta(i, 0))));
 	}
+
+	//std::cout << "problematic_snvs size:\t" << problematic_snvs.size() << std::endl;
+
 	
         linear = DELTA * (alpha * eta_old + tau_new) - B.cwiseProduct(A);
 
@@ -308,6 +322,9 @@ int  CliPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_,
 	//std::cout << residual << std::endl;
     }
 
+    sort( problematic_snvs.begin(), problematic_snvs.end() );
+    problematic_snvs.erase( unique( problematic_snvs.begin(), problematic_snvs.end() ), problematic_snvs.end() );
+    
     std::cout << std::endl;
     
     MatrixXd diff(No_mutation, No_mutation);
@@ -636,6 +653,25 @@ int  CliPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_,
     label_file.close();
     summary_file.close();
 
+
+    if (problematic_snvs.size()>0){
+
+      std::string problematic_snvs_file_path = preliminary_folder + "/lam" + lambda_str + "_problematic_snvs.txt";
+      ofstream problematic_snvs_file;
+
+      problematic_snvs_file.open(problematic_snvs_file_path);
+
+      if(!problematic_snvs_file.is_open()){
+        std::cerr << "Cannot open file " << problematic_snvs_file_path  << std::endl;
+        return 1;
+      }
+
+      for(i = 0; i < int(problematic_snvs.size()); i++){
+        problematic_snvs_file << problematic_snvs[i] << "\n";
+      }
+    }
+
+    
     return 0;
 }
 

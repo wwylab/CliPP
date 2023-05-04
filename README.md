@@ -116,6 +116,10 @@ The final result for CliP is two-fold:
 * The subclonal structure, i.e., clustering results: cluster number, the total number of SNVs in each cluster, and the estimated CP for each cluster.
 * The mutation assignment, i.e., cluster id for each mutation. This output can then serve as the basis for inference of phylogenetic trees.
 
+Occasionally, a warning file may appear in the output, which can be caused by two factors:
+* For SNVs where the read count information that does not match the CNA-based input data, leading to out-of-bound calculations in the CliP model, we replace the out-of-bound values with 0.01 and these SNVs are flagged as 1. This is an extremely rare case in real data when the CNA data are good, e.g. TCGA and PCAWG data. When many 1's are observed, the users should look into the quality of the CNA input data.
+* While rare, some lambda values may not produce an output. In these instances, CliP will select the best available result and list the failing lambda values in the warning file.
+
 ## Citation
 If you are using this framework, please cite our paper
 ```

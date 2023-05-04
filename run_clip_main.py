@@ -1,5 +1,6 @@
 import sys
 import os
+from os import listdir
 
 if not (sys.version_info[0] == 3 and sys.version_info[1] >= 5 and sys.version_info[2] >= 1):
     sys.stderr.write("Error message: CliP can only run with python >=3.5.1\n")
@@ -83,15 +84,14 @@ p_preprocess = subprocess.Popen(["Rscript",
                                  args.purity_input, 
                                  args.sample_id, 
                                  path_for_preprocess], 
-                                stdout=subprocess.PIPE, 
-                                stderr=subprocess.PIPE)
+                                 stdout=subprocess.PIPE, 
+                                 stderr=subprocess.PIPE)
 
 _stdout, _stderr = p_preprocess.communicate()
 
-print(_stderr)
 if "error" in _stderr.decode().strip().lower():
-	print(_stderr.decode().strip())
-	sys.exit(-1)
+    print(_stderr.decode().strip())
+    sys.exit(-1)
 print("Preprocessing finished.")
 
 run_postprocess = os.path.join(current_dir, "src/postprocess.R")
@@ -100,42 +100,43 @@ run_postprocess = os.path.join(current_dir, "src/postprocess.R")
 # Run the main CliP function (without subsampling)
 print("Running the main CliP function...")
 if not args.subsampling:
-	start = time.time()
-	run_clip_nosub(path_for_preprocess, path_for_preliminary, lambda_list)
-	end = time.time()
-	elapsed_time = end - start
-	print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
+    start = time.time()
+    run_clip_nosub(path_for_preprocess, path_for_preliminary, lambda_list)
+    end = time.time()
+    elapsed_time = end - start
+    print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
 	
-	# Run postprocessing
-	p_postprocess = subprocess.Popen(["Rscript", 
-                                   run_postprocess, 
-                                   path_for_preliminary, 
-                                   path_for_preprocess, 
-                                   path_for_final, 
-                                   str(1)], 
-                                  stdout=subprocess.PIPE, 
-                                  stderr=subprocess.PIPE)
+    # Run postprocessing
+
+    p_postprocess = subprocess.Popen(["Rscript", 
+                                      run_postprocess, 
+                                      path_for_preliminary, 
+                                      path_for_preprocess, 
+                                      path_for_final, 
+                                      str(1)], 
+                                     stdout=subprocess.PIPE, 
+                                     stderr=subprocess.PIPE)
  
-	_stdout, _stderr = p_postprocess.communicate()
-	
-	if "error" in _stderr.decode().strip().lower():
-		print(_stderr.decode().strip())
-		sys.exit(-1)
+    _stdout, _stderr = p_postprocess.communicate()
+        
+    if "error" in _stderr.decode().strip().lower():
+        print(_stderr.decode().strip())
+        sys.exit(-1)
 		
-	# The lambda selection methods:
-	if args.lam is None:
-		run_lambda_selection(args.purity_input, path_for_final)
+    # The lambda selection methods:
+    if args.lam is None:
+        run_lambda_selection(args.purity_input, path_for_final)
 
 # Run the main CliP function (with subsampling)
 else:    
     start = time.time()
     run_clip_sub(path_for_preprocess, 
-              path_for_preliminary, 
-              lambda_list,
-              args.subsample_size,
-              args.rep_num, 
-              args.window_size, 
-              args.overlap_size)
+                 path_for_preliminary, 
+                 lambda_list,
+                 args.subsample_size,
+                 args.rep_num, 
+                 args.window_size, 
+                 args.overlap_size)
  
     end = time.time()
     elapsed_time = end - start
@@ -147,8 +148,8 @@ else:
                                       path_for_preliminary, 
                                       path_for_preprocess, 
                                       path_for_final, str(1)], 
-                                     stdout=subprocess.PIPE, 
-                                     stderr=subprocess.PIPE)
+                                      stdout=subprocess.PIPE, 
+                                      stderr=subprocess.PIPE)
     _stdout, _stderr = p_postprocess.communicate()
     if "error" in _stderr.decode().strip().lower():
         print(_stderr.decode().strip())
@@ -157,10 +158,116 @@ else:
     # The lambda selection methods:
     if args.lam is None:
         run_lambda_selection(args.purity_input, path_for_final)
-  
+
+## Annotate problematic SNVs. 
+
+warning_tag = dict()
+warning_tag[0] = []
+warning_tag[1] = []
+
 try:
+    for f in listdir(path_for_preliminary):
+        if f.endswith('_problematic_snvs.txt'):
+
+            problematic_snv_indices = []
+            with open(os.path.join(path_for_preliminary, f), 'r') as handle:
+                for line in handle:
+                    line = line.strip()
+                    if len(line) > 0:
+                        line = int(line)
+                        problematic_snv_indices.append(line)
+
+            lambda_num = f.replace('_problematic_snvs.txt', '')
+            warning_tag[0].append(lambda_num.replace('lam', ''))
+            
+            mutation_assignment_f = 'mutation_assignments_%s.txt' % (lambda_num)
+            mutation_assignments = []
+            with open(os.path.join(path_for_final, mutation_assignment_f), 'r') as handle:
+                for line in handle:
+                    line = line.strip()
+                    if len(line) > 0:
+                        mutation_assignments.append(line)
+
+            output_handle = open(os.path.join(path_for_final, mutation_assignment_f), 'w')
+            count = 0
+
+            for line in mutation_assignments:
+                if line.startswith('chromosome_index'):
+                    line_out = line + '\t' + 'Warning'
+                    output_handle.write(line_out + '\n')
+                else:
+                    if count in problematic_snv_indices:
+                        line_out = line + '\t' + '1'
+                    else:
+                        line_out = line + '\t' + '0'
+                    output_handle.write(line_out + '\n')
+                    count += 1
+                    
+            
+    for f in listdir(os.path.join(path_for_final, 'Best_lambda')):
+        if f.startswith('mutation_assignments_'):
+            shutil.copy(os.path.join(path_for_final, f), os.path.join(path_for_final, 'Best_lambda', f))
+        
+
     shutil.rmtree(path_for_preliminary)
 except:
     pass
+
+## Write warning file to final_result/Best_lambda folder if applicable
+
+lambda_list_with_results = []
+lambda_list_without_results = []
+for f in listdir(path_for_final):
+    if f.startswith('mutation_assignments_lam') and f.endswith('.txt'):
+        lambda_num = f.replace('mutation_assignments_lam', '').replace('.txt', '')
+        lambda_list_with_results.append(float(lambda_num))
+
+for lambda_num in lambda_list:
+    if lambda_num not in lambda_list_with_results:
+        lambda_list_without_results.append(lambda_num)
+
+warning_tag[1] = lambda_list_without_results
+
+if warning_tag[0] or warning_tag[1]:
+    if not os.path.exists(os.path.join(path_for_final, 'Best_lambda')):
+        os.mkdir(os.path.join(path_for_final, 'Best_lambda'))
+
+    output_handle = open(os.path.join(path_for_final, 'Best_lambda/WARNING.txt'), 'w')
+    output_handle.write('This sample is problematic due to the reason(s) below. Please take caution when use the CliP result.\n')
     
+    if warning_tag[0]:
+        best_lambda_tag = 0
+        for f in listdir(os.path.join(path_for_final, 'Best_lambda')):
+            if f.startswith('mutation_assignments_lam') and f.endswith('.txt'):
+                with open(os.path.join(path_for_final, 'Best_lambda', f)) as handle:
+                    for line in handle:
+                        line = line.strip().split()
+                        if len(line) == 4:
+                            if line[-1] == '1':
+                                best_lambda_tag = 1
+                                break
+
+        
+        _lambdas = ', '.join(warning_tag[0])
+        _mutation_assignment = ['mutation_assignments_lam%s.txt' % (_lambda) for _lambda in warning_tag[0]]
+        _mutation_assignment = ', '.join(_mutation_assignment)
+            
+        output_string = '1. The clustering assignment for some of the SNVs may be not correct for these lambdas: %s. Please check the Warning column in the %s file(s) in the final_result folder' % (_lambdas, _mutation_assignment)
+
+        if best_lambda_tag:
+            output_string = output_string + '. The mutation_assignments file in the Best_lambda folder also has such SNVs. Please check the Warning column as well.'
+        
+        output_handle.write(output_string + '\n')
+
+    if warning_tag[1]:
+        if warning_tag[0]:
+            output_handle.write('2. ')
+        else:
+            output_handle.write('1. ')
+
+        _lambdas = [str(_lambda) for _lambda in  warning_tag[1]]
+        _lambdas = ', '.join(_lambdas)
+        output_handle.write('These lambdas do not have mutation clustering results: %s. The final CliP result in the Best_lambda folder is selected based on the lambdas whose results are available in the final_result folder.\n' % (_lambdas))
+
+        
 print("Main CliP function finished.")

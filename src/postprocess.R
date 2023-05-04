@@ -42,6 +42,16 @@ RATIO.TH            <- 0.90
 # The 11 lambda values in the default lambda list
 Lambda_list = c(0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25)
 
+preliminary_files = list.files(input.prefix, pattern="*_label.txt")
+
+if (length(preliminary_files) == 0){
+   exit(0)
+}else{
+   preliminary_files = stringi::stri_replace_all_fixed(preliminary_files, pattern = "_label.txt", replacement = "")
+   preliminary_files = stringi::stri_replace_all_fixed(preliminary_files, pattern = "lam", replacement = "")
+   Lambda_list = as.numeric(preliminary_files)
+}
+
 if(!dir.exists(output.prefix)){
 	dir.create(output.prefix)
 }
@@ -50,6 +60,7 @@ if(!dir.exists(output.prefix)){
 if(length(args) < 5){
   # Loop over all 11 lambda values in the default lambda list
   for (lam in Lambda_list){
+    print(lam)
     # Extract the output data
     outfile1 <- sprintf("%s/lam%s_phi.txt", input.prefix, lam)
     outfile2 <- sprintf("%s/lam%s_label.txt", input.prefix, lam)

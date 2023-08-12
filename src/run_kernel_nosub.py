@@ -86,16 +86,3 @@ def run_clip_nosub(prefix, preliminary_result, lambda_list):
                   Lambda_list, Lambda_num, alpha, rho, gamma, Run_limit, precision,
                   control_large, least_mut, post_th, least_diff,
                   coef, wcut, purity, preliminary_result.encode('utf-8'))
-
-
-if __name__ == "__main__":
-    root = "/rsrch3/home/bcb/wwang7/Team/MutationCalling/CliP_Bacup_June15_2022/TCGA_input_consensus_Shuangxi/"
-    sample_id = "TCGA-05-4396"
-    preliminary_result = root + sample_id + "/preliminary_result/"
-    prefix = root + sample_id + "/intermediate/"
-    run_clip_nosub(prefix, preliminary_result)
-    
-
-    
-    
-    

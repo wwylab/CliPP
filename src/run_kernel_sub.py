@@ -161,14 +161,19 @@ def run_clip_sub(prefix, preliminary_result, Lambda_list, No_subsampling, rep, w
 
         for _lambda in Lambda_list:
             _phi_file_path = os.path.join(preliminary_result, "lam%s_phi.txt" %(_lambda))
+            _phi_file_path_new = os.path.join(preliminary_result, "lam%s_phi_rep%s.txt" %(_lambda, j))
+
             _label_file_path = os.path.join(preliminary_result, "lam%s_label.txt" %(_lambda))
-            
+            _label_file_path_new = os.path.join(preliminary_result, "lam%s_label_rep%s.txt" %(_lambda, j))
+
             _sum_old_file_path = os.path.join(preliminary_result, "lam%s_summary_table.txt" %(_lambda))
             _sum_new_file_path = os.path.join(preliminary_result, "lam%s_rep%s.txt" %(_lambda, j))
-            
+
             try:
-                os.remove(_phi_file_path)
-                os.remove(_label_file_path)
+                # os.remove(_phi_file_path)
+                # os.remove(_label_file_path)
                 os.rename(_sum_old_file_path, _sum_new_file_path)
+                os.rename(_phi_file_path, _phi_file_path_new)
+                os.rename(_label_file_path, _label_file_path_new)
             except Exception as err:
                 sys.stderr.write(err)

@@ -45,8 +45,17 @@ Lambda_list = c(0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.
 preliminary_files = list.files(input.prefix, pattern="*_label")
 
 if (length(preliminary_files) == 0){
+  stop("There is an error here.")
+}
+
+Lambda_list = sub(pattern="_label.txt", replacement = "", preliminary_files)
+Lambda_list = sub(pattern="lam", replacement = "", Lambda_list)
+Lambda_list = as.numeric(Lambda_list)
+
+if(length(Lambda_list) == 0){
    stop("There is an error here.")
 }
+
 # else{
 #    preliminary_files = stringi::stri_replace_all_fixed(preliminary_files, pattern = "_label.txt", replacement = "")
 #    preliminary_files = stringi::stri_replace_all_fixed(preliminary_files, pattern = "lam", replacement = "")

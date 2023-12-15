@@ -1,16 +1,16 @@
 
 '''----------------------------------------------------------------------
-This script takes care of the running of CliP
-Usually you will need to run CliP on HPC;
+This script takes care of the running of CliPP
+Usually you will need to run CliPP on HPC;
 the preprocess script makes the input anonymous, so that you can up load them to HPC
 Authors: Kaixian Yu, Yujie Jiang, Shuangxi Ji. Yuxin Tang
 Date: 04/02/2021
 Email: yujiejiang679@gmail.com
 ----------------------------------------------------------------------
-This script takes the following argument: path_to_input path_to_output path_to_clip lam
+This script takes the following argument: path_to_input path_to_output path_to_clipp lam
 -----------------------------------------------------------------------
 Debug use
-sys.argv = ['/Users/kaixiany/Working/CliP/Sample_data/intermediate/', '/Users/kaixiany/Working/CliP/Sample_data/results/', '/Users/kaixiany/Working/CliP/', '1.5']
+sys.argv = ['/Users/kaixiany/Working/CliPP/Sample_data/intermediate/', '/Users/kaixiany/Working/CliPP/Sample_data/results/', '/Users/kaixiany/Working/CliPP/', '1.5']
 '''
 
 import os
@@ -21,22 +21,22 @@ import ctypes
 import glob
 
 
-def run_clip_nosub(prefix, preliminary_result, lambda_list):
+def run_clipp_nosub(prefix, preliminary_result, lambda_list):
     if not os.path.exists(preliminary_result):
         os.makedirs(preliminary_result)
         
     current_folder = os.path.dirname(os.path.abspath(__file__))
-    clip_lib_path = glob.glob(os.path.join(current_folder, "../build/*/CliP*%s*.so" %(sys.platform)))
-    if not clip_lib_path:
+    clipp_lib_path = glob.glob(os.path.join(current_folder, "../build/*/CliPP*%s*.so" %(sys.platform)))
+    if not clipp_lib_path:
         sys.stderr.write("Cannot find shared lib. Make sure run run python setup.py build first.\n")
         sys.exit(0)
 
-    clip_lib_path = clip_lib_path[0]
-    if not os.path.isfile(clip_lib_path):
+    clipp_lib_path = clipp_lib_path[0]
+    if not os.path.isfile(clipp_lib_path):
         sys.stderr.write("Cannot find shared lib. Make sure run run python setup.py build first.\n")
         sys.exit(0)
         
-    clip_lib = ctypes.CDLL(clip_lib_path)
+    clipp_lib = ctypes.CDLL(clipp_lib_path)
     
     r = genfromtxt(prefix+"r.txt", delimiter="\t")
     n = genfromtxt(prefix+"n.txt", delimiter="\t")
@@ -78,11 +78,11 @@ def run_clip_nosub(prefix, preliminary_result, lambda_list):
     coef = coef.astype(np.float64)
     wcut = wcut.astype(np.float64)
 
-    clip_lib.CliP.restype = None
+    clipp_lib.CliPP.restype = None
 
-    clip_lib.CliP.argtypes = [ctypes.c_int, np.ctypeslib.ndpointer(dtype=np.int32),np.ctypeslib.ndpointer(dtype=np.int32),np.ctypeslib.ndpointer(dtype=np.int32), np.ctypeslib.ndpointer(dtype=np.int32), ctypes.c_double,np.ctypeslib.ndpointer(dtype=np.float64), ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double, ctypes.c_int,ctypes.c_int, ctypes.c_double, ctypes.c_double, np.ctypeslib.ndpointer(dtype=np.float64), np.ctypeslib.ndpointer(dtype=np.float64), ctypes.c_double, ctypes.c_char_p]
+    clipp_lib.CliPP.argtypes = [ctypes.c_int, np.ctypeslib.ndpointer(dtype=np.int32),np.ctypeslib.ndpointer(dtype=np.int32),np.ctypeslib.ndpointer(dtype=np.int32), np.ctypeslib.ndpointer(dtype=np.int32), ctypes.c_double,np.ctypeslib.ndpointer(dtype=np.float64), ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double, ctypes.c_int,ctypes.c_int, ctypes.c_double, ctypes.c_double, np.ctypeslib.ndpointer(dtype=np.float64), np.ctypeslib.ndpointer(dtype=np.float64), ctypes.c_double, ctypes.c_char_p]
 
-    clip_lib.CliP(No_mutation, r, n, minor, total, ploidy,
+    clipp_lib.CliPP(No_mutation, r, n, minor, total, ploidy,
                   Lambda_list, Lambda_num, alpha, rho, gamma, Run_limit, precision,
                   control_large, least_mut, post_th, least_diff,
                   coef, wcut, purity, preliminary_result.encode('utf-8'))

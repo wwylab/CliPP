@@ -16,20 +16,44 @@ Subpopulations of tumor cells characterized by mutation profiles may confer diff
 - pandas
 
 ## Setting up CliPP
+
+### Manual Install
 ```
-git clone https://github.com/wwylab/CliP.git
-cd CliP
+git clone https://github.com/wwylab/CliPP.git
+cd CliPP
 
 python setup.py build
 ```
 
-## Structure of CliP implementation
-The flow chart below shows the CliP implementation. Raw functions and scripts are under `scr/`. 
+
+### Docker container
+We also include a `Dockerfile` in the repository. The user can build and run a Docker contrainer of CliPP to avoid any issues caused by package dependencies. The following provides a tutorial about this. 
+
+- Download and install `Docker` (https://docs.docker.com/get-docker/).
+- Download the `Dockerfile` from this repository. Alternatively, you can clone the whole repository to your machine.
+- Open a terminal on your machine and change directory to the folder of `Dockerfile`. Create a Docker container for CliPP using the command: 
+
+  ```
+  docker build -t clipp .
+  ```
+  
+- Use the sample data in the repository as an example to show how the run the docker container: 
+
+  ```
+  git clone https://github.com/wwylab/CliPP.git
+  cd CliPP
+  docker run -v $(pwd):/Sample clipp python3 /CliPP/run_clipp_main.py -i /Sample/test /Sample/sample/sample.snv.txt /Sample/sample/sample.cna.txt /Sample/sample/sample.purity.txt
+  ```
+  
+**Note**: `-v $(pwd):/Sample` is to mount the the current directory in the host (the machine itself) to the container's directory of `/Sample`, so the input data in the current directory `sample/sample.cna.txt`, `sample/sample.cna.txt` and `sample/sample.purity.txt` can be seen by the container through `/Sample/sample/sample.snv.txt`, `/Sample/sample/sample.cna.txt`, `/Sample/sample/sample.purity.txt`. The output folder is located at `/Sample/test` in the container, which can be accessed at `$(pwd)/test` in the host machine. 
+
+## Structure of CliPP implementation
+The flow chart below shows the CliPP implementation. Raw functions and scripts are under `scr/`. 
 ![image](https://user-images.githubusercontent.com/14543452/114482762-bf4c1480-9bcc-11eb-8c96-a944611e91d7.png)
 
-CliP can run on samples with up to 50,000 SNVs on a machine with 256GB memory. It may require more memory when there are more SNVs. When that happens, we apply a downsampling strategy, as implemented in all other subclonal reconstruction methods. 
+CliPP can run on samples with up to 50,000 SNVs on a machine with 256GB memory. It may require more memory when there are more SNVs. When that happens, we apply a downsampling strategy, as implemented in all other subclonal reconstruction methods. 
 
-Furthermore, CliP is automatically run in parallel when users have multiple cores available.
+Furthermore, CliPP is automatically run in parallel when users have multiple cores available.
 
 ## Input data sample
 There are three required input files:
@@ -53,17 +77,17 @@ There are three required input files:
 A simulated sample input data is under `sample/`. 
 
 
-## Running CliP with one-step implementation
+## Running CliPP with one-step implementation
 
-The caller function `run_clip_main.py` wraps up the CliP pipeline and enables users to implement subclonal reconstruction in one-step. To try CliP with our sample input, you may run:
+The caller function `run_clipp_main.py` wraps up the CliPP pipeline and enables users to implement subclonal reconstruction in one-step. To try CliPP with our sample input, you may run:
 ```
-python run_clip_main.py sample/sample.snv.txt sample/sample.cna.txt sample/sample.purity.txt
+python run_clipp_main.py sample/sample.snv.txt sample/sample.cna.txt sample/sample.purity.txt
 ````
 
 A full manual is as follows:
 
 ```
-usage: run_clip_main.py [-h] [-i SAMPLE_ID] [-e PREPROCESS] [-b] [-f FINAL] [-l LAM] 
+usage: run_clipp_main.py [-h] [-i SAMPLE_ID] [-e PREPROCESS] [-b] [-f FINAL] [-l LAM] 
                         [-s SUBSAMPLE_SIZE] [-n REP_NUM] [-w WINDOW_SIZE] [-o OVERLAP_SIZE]
                         snv_input cn_input purity_input
 
@@ -107,18 +131,18 @@ The followings parameters are only needed when doing subsampling. We take partit
 ```
 
 
-## The CliP Outputs
+## The CliPP Outputs
 By default, all outputs will be stored in the folder named `sample_id`, and this name can be changed with the `-i` or `--sample_id ` option.
 
 In final results, cluster index = 0 indicates clonal mutations, while non-zero cluster indexes indicate subclonal mutations.
 
-The final result for CliP is two-fold:
+The final result for CliPP is two-fold:
 * The subclonal structure, i.e., clustering results: cluster number, the total number of SNVs in each cluster, and the estimated CP for each cluster.
 * The mutation assignment, i.e., cluster id for each mutation. This output can then serve as the basis for inference of phylogenetic trees.
 
 Occasionally, a warning file may appear in the output, which can be caused by two factors:
-* For SNVs where the read count information that does not match the CNA-based input data, leading to out-of-bound calculations in the CliP model, we replace the out-of-bound values with 0.01 and these SNVs are flagged as 1. This is an extremely rare case in real data when the CNA data are good, e.g. TCGA and PCAWG data. When many 1's are observed, the users should look into the quality of the CNA input data.
-* While rare, some lambda values may not produce an output. In these instances, CliP will select the best available result and list the failing lambda values in the warning file.
+* For SNVs where the read count information that does not match the CNA-based input data, leading to out-of-bound calculations in the CliPP model, we replace the out-of-bound values with 0.01 and these SNVs are flagged as 1. This is an extremely rare case in real data when the CNA data are good, e.g. TCGA and PCAWG data. When many 1's are observed, the users should look into the quality of the CNA input data.
+* While rare, some lambda values may not produce an output. In these instances, CliPP will select the best available result and list the failing lambda values in the warning file.
 
 ## Citation
 If you are using this framework, please cite our paper

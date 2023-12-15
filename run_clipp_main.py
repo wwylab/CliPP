@@ -6,7 +6,7 @@ from os import listdir
 version_morph = sys.version_info[0]*10000+sys.version_info[1]*100+sys.version_info[2]
 version_base = 30501
 if not (version_morph >= version_base):
-    sys.stderr.write("Error message: CliP can only run with python >=3.5.1\n")
+    sys.stderr.write("Error message: CliPP can only run with python >=3.5.1\n")
     sys.exit(-1)
 
 import argparse
@@ -17,8 +17,8 @@ import time
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(current_dir, "src"))
 
-from run_kernel_nosub import run_clip_nosub
-from run_kernel_sub import run_clip_sub
+from run_kernel_nosub import run_clipp_nosub
+from run_kernel_sub import run_clipp_sub
 from penalty_selection import run_lambda_selection
 
 parser = argparse.ArgumentParser()
@@ -100,11 +100,11 @@ print("Preprocessing finished.")
 run_postprocess = os.path.join(current_dir, "src/postprocess.R")
 # run_lambda_selection = os.path.join(current_dir, "src/penalty_selection.py")
 
-# Run the main CliP function (without subsampling)
-print("Running the main CliP function...")
+# Run the main CliPP function (without subsampling)
+print("Running the main CliPP function...")
 if not args.subsampling:
     start = time.time()
-    run_clip_nosub(path_for_preprocess, path_for_preliminary, lambda_list)
+    run_clipp_nosub(path_for_preprocess, path_for_preliminary, lambda_list)
     end = time.time()
     elapsed_time = end - start
     print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
@@ -130,10 +130,10 @@ if not args.subsampling:
     if args.lam is None:
         run_lambda_selection(args.purity_input, path_for_final)
 
-# Run the main CliP function (with subsampling)
+# Run the main CliPP function (with subsampling)
 else:    
     start = time.time()
-    run_clip_sub(path_for_preprocess, 
+    run_clipp_sub(path_for_preprocess, 
                  path_for_preliminary, 
                  lambda_list,
                  args.subsample_size,
@@ -236,7 +236,7 @@ if warning_tag[0] or warning_tag[1]:
         os.mkdir(os.path.join(path_for_final, 'Best_lambda'))
 
     output_handle = open(os.path.join(path_for_final, 'Best_lambda/WARNING.txt'), 'w')
-    output_handle.write('This sample is problematic due to the reason(s) below. Please take caution when use the CliP result.\n')
+    output_handle.write('This sample is problematic due to the reason(s) below. Please take caution when use the CliPP result.\n')
     
     if warning_tag[0]:
         best_lambda_tag = 0
@@ -270,7 +270,7 @@ if warning_tag[0] or warning_tag[1]:
 
         _lambdas = [str(_lambda) for _lambda in  warning_tag[1]]
         _lambdas = ', '.join(_lambdas)
-        output_handle.write('These lambdas do not have mutation clustering results: %s. The final CliP result in the Best_lambda folder is selected based on the lambdas whose results are available in the final_result folder.\n' % (_lambdas))
+        output_handle.write('These lambdas do not have mutation clustering results: %s. The final CliPP result in the Best_lambda folder is selected based on the lambdas whose results are available in the final_result folder.\n' % (_lambdas))
 
         
-print("Main CliP function finished.")
+print("Main CliPP function finished.")

@@ -31,11 +31,11 @@ double ST(double x, double lam){
     return (0.0);
 }
 
-int  CliPIndividual(int, MatrixXd &, MatrixXd &, MatrixXd &, MatrixXd &, double, double, double, double, double, int, double, int, int, double, double, MatrixXd &, MatrixXd &, double, std::string &, MatrixXd &, MatrixXd &, MatrixXi &, SparseMatrix<double, Eigen::RowMajor> &, double);
+int  CliPPIndividual(int, MatrixXd &, MatrixXd &, MatrixXd &, MatrixXd &, double, double, double, double, double, int, double, int, int, double, double, MatrixXd &, MatrixXd &, double, std::string &, MatrixXd &, MatrixXd &, MatrixXi &, SparseMatrix<double, Eigen::RowMajor> &, double);
 
 
 
-int CliPCPP(int No_mutation, int* c_r, int *c_n, int *c_minor, int *c_total, double ploidy, double* Lambda_list, int Lambda_num, double alpha, double rho, double gamma, int Run_limit, double precision, int control_large, int least_mut, double post_th, double least_diff, double* c_coef_1d, double* c_wcut_1d, double purity, char* preliminary){
+int CliPPCPP(int No_mutation, int* c_r, int *c_n, int *c_minor, int *c_total, double ploidy, double* Lambda_list, int Lambda_num, double alpha, double rho, double gamma, int Run_limit, double precision, int control_large, int least_mut, double post_th, double least_diff, double* c_coef_1d, double* c_wcut_1d, double purity, char* preliminary){
 
   std::string preliminary_folder(preliminary);
   //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -131,7 +131,7 @@ int CliPCPP(int No_mutation, int* c_r, int *c_n, int *c_minor, int *c_total, dou
 	double Lambda = Lambda_list[lambda_index];
 	//if(Lambda != 0.01) continue;
     
-	CliPIndividual(No_mutation, r, n, minor_, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef_1d, wcut_1d, purity, preliminary_folder, theta_hat, phi_hat, ids, DELTA, scale_parameter);
+	CliPPIndividual(No_mutation, r, n, minor_, total, ploidy, Lambda, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef_1d, wcut_1d, purity, preliminary_folder, theta_hat, phi_hat, ids, DELTA, scale_parameter);
     }
 
     //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -153,7 +153,7 @@ int CliPCPP(int No_mutation, int* c_r, int *c_n, int *c_minor, int *c_total, dou
     return 0;
 }
 
-int  CliPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_, MatrixXd &total, double ploidy, double Lambda, double alpha, double rho, double gamma, int Run_limit, double precision, int control_large, int least_mut, double post_th, double least_diff, MatrixXd &coef_1d, MatrixXd &wcut_1d, double purity, std::string &preliminary_folder, MatrixXd &theta_hat, MatrixXd &phi_hat, MatrixXi &ids, SparseMatrix<double, Eigen::RowMajor> &DELTA, double scale_parameter)
+int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_, MatrixXd &total, double ploidy, double Lambda, double alpha, double rho, double gamma, int Run_limit, double precision, int control_large, int least_mut, double post_th, double least_diff, MatrixXd &coef_1d, MatrixXd &wcut_1d, double purity, std::string &preliminary_folder, MatrixXd &theta_hat, MatrixXd &phi_hat, MatrixXi &ids, SparseMatrix<double, Eigen::RowMajor> &DELTA, double scale_parameter)
 {
     
     int i, j, k, count;
@@ -677,11 +677,11 @@ int  CliPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_,
 
 
 extern "C" {
-    void CliP(int No_mutation, int* r, int *n, int* minor, int* total, double ploidy,
+    void CliPP(int No_mutation, int* r, int *n, int* minor, int* total, double ploidy,
 	      double* Lambda_list, int Lambda_num, double alpha, double rho, double gamma, int Run_limit, double precision,
 	      int control_large, int least_mut, double post_th, double least_diff,
 	      double* coef_1d, double* wcut_1d, double purity, char* preliminary){
 
-	CliPCPP(No_mutation, r, n, minor, total, ploidy, Lambda_list, Lambda_num, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef_1d, wcut_1d, purity, preliminary);
+	CliPPCPP(No_mutation, r, n, minor, total, ploidy, Lambda_list, Lambda_num, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef_1d, wcut_1d, purity, preliminary);
     }
 }

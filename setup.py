@@ -6,19 +6,19 @@ import os
 version_morph = sys.version_info[0]*10000+sys.version_info[1]*100+sys.version_info[2]
 version_base = 30501
 if not (version_morph >= version_base):
-    sys.stderr.write("Error message: CliP can only run with python >=3.5.1\n")
+    sys.stderr.write("Error message: CliPP can only run with python >=3.5.1\n")
     sys.exit(-1)
 
 if sys.platform.startswith('darwin'):
     os.environ['CC'] = "clang"
     os.environ['CXX'] = "clang++"
-    ext_modules=[Extension('CliP', ['./src/kernel.cpp'], include_dirs=['eigen-3.4.0'], extra_compile_args = ['-O3'], extra_link_args = ['-O3']),]
+    ext_modules=[Extension('CliPP', ['./src/kernel.cpp'], include_dirs=['eigen-3.4.0'], extra_compile_args = ['-O3'], extra_link_args = ['-O3']),]
 else:
-    ext_modules=[Extension('CliP', ['./src/kernel.cpp'], include_dirs=['eigen-3.4.0'], extra_compile_args = ['-O3', '-fopenmp'], extra_link_args = ['-O3', '-fopenmp']),]
+    ext_modules=[Extension('CliPP', ['./src/kernel.cpp'], include_dirs=['eigen-3.4.0'], extra_compile_args = ['-O3', '-fopenmp'], extra_link_args = ['-O3', '-fopenmp']),]
 
     
 setup(
-    name="CliP",
+    name="CliPP",
     ext_modules=ext_modules)
 
 

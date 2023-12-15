@@ -4,12 +4,12 @@
 # general, higher lambda values return fewer clusters. We introduce a selection approach, which focuses on
 # the match of clonal mutations, rather than a perfect match of the overall structure. 
 
-# This script is a rule of thumb method to select one lambda when you run CliP with multiple lambdas.
+# This script is a rule of thumb method to select one lambda when you run CliPP with multiple lambdas.
 #------------------------------------------------------------#
 
 #------------------------------------------------------------#
 # The automated lambda selection pipeline is as follows: 
-# 1) Run CliP with 11 different lambdas: [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25]. 
+# 1) Run CliPP with 11 different lambdas: [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25]. 
 # 2) For each sample, compute a score: A = |(max(CP)−purity)/purity|. 
 # If there are one or more results that satisfy A < 0.01, we select the largest lambda associated with those results. 
 # (We observed A<0.01 in more than 70% of the PCAWG samples)

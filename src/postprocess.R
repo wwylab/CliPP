@@ -1,5 +1,5 @@
 #------------------------------------------------------------#
-# This script takes care of the postprocessing for CliP.
+# This script takes care of the postprocessing for CliPP.
 # The postprocessing procedure mostly takes care of the harmonization of the results from the penalized model.
 # Authors: Kaixian Yu, Yujie Jiang
 # Email: yjiang13@mdanderson.org

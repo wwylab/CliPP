@@ -1,5 +1,5 @@
 #------------------------------------------------------------#
-# This script takes care of the postprocessing for CliP.
+# This script takes care of the postprocessing for CliPP.
 # The postprocessing procedure mostly takes care of the harmonization of the results from the penalized model.
 # Authors: Kaixian Yu, Yujie Jiang
 # Email: yjiang13@mdanderson.org
@@ -48,7 +48,7 @@ if (length(preliminary_files) == 0){
   stop("There is an error here.")
 }
 
-Lambda_list = sub(pattern="_label.txt", replacement = "", preliminary_files)
+Lambda_list = sub(pattern="_label.*", replacement = "", preliminary_files)
 Lambda_list = sub(pattern="lam", replacement = "", Lambda_list)
 Lambda_list = as.numeric(Lambda_list)
 

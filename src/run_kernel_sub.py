@@ -1,15 +1,15 @@
 '''----------------------------------------------------------------------
-This script takes care of the running of CliP in case subsampling is needed
-Usually you will need to run CliP on HPC; 
+This script takes care of the running of CliPP in case subsampling is needed
+Usually you will need to run CliPP on HPC; 
 the preprocess script makes the input anonymous, so that you can up load them to HPC
 Authors: Kaixian Yu, Yujie Jiang
 Date: 04/02/2021
 Email: yujiejiang679@gmail.com
 ----------------------------------------------------------------------
-This script takes the following argument: path_to_input path_to_output path_to_clip No_subsampling Rep_num window_size overlap_size lam
+This script takes the following argument: path_to_input path_to_output path_to_clipp No_subsampling Rep_num window_size overlap_size lam
 -----------------------------------------------------------------------
 Debug use
-sys.argv = ['/Users/kaixiany/Working/CliP/Sample_data/intermediate/', '/Users/kaixiany/Working/CliP/Sample_data/results/', '/Users/kaixiany/Working/CliP/', '1.5', '1500', '1', '0.05', '0']
+sys.argv = ['/Users/kaixiany/Working/CliPP/Sample_data/intermediate/', '/Users/kaixiany/Working/CliPP/Sample_data/results/', '/Users/kaixiany/Working/CliPP/', '1.5', '1500', '1', '0.05', '0']
 '''
 import os
 import sys
@@ -24,36 +24,36 @@ import glob
 #    os.makedirs(sys.argv[2])
 
 '''----------------------------------------------------------------------
-This script takes care of the running of CliP
-Usually you will need to run CliP on HPC;
+This script takes care of the running of CliPP
+Usually you will need to run CliPP on HPC;
 the preprocess script makes the input anonymous, so that you can up load them to HPC
-Authors: Kaixian Yu, Yujie Jiang, Yuxin Tang
+Authors: Kaixian Yu, Yujie Jiang
 Date: 04/02/2021
 Email: yujiejiang679@gmail.com
 ----------------------------------------------------------------------
-This script takes the following argument: path_to_input path_to_output path_to_clip lam
+This script takes the following argument: path_to_input path_to_output path_to_clipp lam
 -----------------------------------------------------------------------
 Debug use
-sys.argv = ['/Users/kaixiany/Working/CliP/Sample_data/intermediate/', '/Users/kaixiany/Working/CliP/Sample_data/results/', '/Users/kaixiany/Working/CliP/', '1.5']
+sys.argv = ['/Users/kaixiany/Working/CliPP/Sample_data/intermediate/', '/Users/kaixiany/Working/CliPP/Sample_data/results/', '/Users/kaixiany/Working/CliPP/', '1.5']
 '''
 
 
-def run_clip_sub(prefix, preliminary_result, Lambda_list, No_subsampling, rep, window_size, overlap):
+def run_clipp_sub(prefix, preliminary_result, Lambda_list, No_subsampling, rep, window_size, overlap):
     if not os.path.exists(preliminary_result):
         os.makedirs(preliminary_result)
 
     current_folder = os.path.dirname(os.path.abspath(__file__))
-    clip_lib_path = glob.glob(os.path.join(current_folder, "../build/*/CliP*%s*.so" %(sys.platform)))
-    if not clip_lib_path:
+    clipp_lib_path = glob.glob(os.path.join(current_folder, "../build/*/CliPP*%s*.so" %(sys.platform)))
+    if not clipp_lib_path:
         sys.stderr.write("Cannot find shared lib. Make sure run run python setup.py build first.\n")
         sys.exit(0)
 
-    clip_lib_path = clip_lib_path[0]
-    if not os.path.isfile(clip_lib_path):
+    clipp_lib_path = clipp_lib_path[0]
+    if not os.path.isfile(clipp_lib_path):
         sys.stderr.write("Cannot find shared lib. Make sure run run python setup.py build first.\n")
         sys.exit(0)
         
-    clip_lib = ctypes.CDLL(clip_lib_path)
+    clipp_lib = ctypes.CDLL(clipp_lib_path)
 
     Lambda_num = len(Lambda_list)
     Lambda_list = np.array(Lambda_list).astype(np.float64)
@@ -131,8 +131,8 @@ def run_clip_sub(prefix, preliminary_result, Lambda_list, No_subsampling, rep, w
         wcut = wcut.astype(np.float64)
         
         
-        clip_lib.CliP.restype = None
-        clip_lib.CliP.argtypes = [ctypes.c_int, 
+        clipp_lib.CliPP.restype = None
+        clipp_lib.CliPP.argtypes = [ctypes.c_int, 
                                   np.ctypeslib.ndpointer(dtype=np.int32),
                                   np.ctypeslib.ndpointer(dtype=np.int32),
                                   np.ctypeslib.ndpointer(dtype=np.int32), 
@@ -154,7 +154,7 @@ def run_clip_sub(prefix, preliminary_result, Lambda_list, No_subsampling, rep, w
                                   ctypes.c_double, 
                                   ctypes.c_char_p]
         
-        clip_lib.CliP(No_mutation, r, n, minor, total, ploidy,
+        clipp_lib.CliPP(No_mutation, r, n, minor, total, ploidy,
                 Lambda_list, Lambda_num, alpha, rho, gamma, Run_limit, precision,
                 control_large, least_mut, post_th, least_diff,
                 coef, wcut, purity, preliminary_result.encode('utf-8'))

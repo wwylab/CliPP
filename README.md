@@ -167,9 +167,9 @@ The second file outputs a detailed list of mutation assignment result, i.e., for
 <ins>The expected run time for this sample on a personal desktop computer or laptop is around 1 second or less.</ins>
 
 ## Citation
-If you are using this framework, please cite our paper
+If you are using this framework, please cite our methods description on bioRxiv:
 ```
-@article{Jiang2021,
+@article{CliPPmethod,
     title = {CliP: subclonal architecture reconstruction of cancer cells in DNA sequencing data using a penalized likelihood model},
     author = {Jiang, Yujie and Yu, Kaixian and Ji, Shuangxi and Shin, Seung Jun and Cao, Shaolong and Montierth, Matthew D and Huang, Licai and Kopetz, Scott and Msaouel, Pavlos and Wang, Jennifer Rui and Kimmel, Marek and Zhu, Hongtu and Wang, Wenyi},
     journal = {bioRxiv},

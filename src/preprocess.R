@@ -30,49 +30,69 @@ if(!file.exists(purity.file)){
 if(!dir.exists(output.prefix)){
     dir.create(output.prefix, recursive = TRUE)
 }
-# some utility functions used to conduct the linear approximation
+# utility function used to conduct the linear approximation
 
-theta = function(w,bv,cv,cn,purity){
-    return((exp(w)*bv)/( (1+exp(w))*cn*(1-purity) + (1+exp(w))*cv*purity) )
+LinearApproximate <- function(bv, cv, cn, purity, diag.plot = FALSE) {
+  # Local theta() using the parameters of this call
+  theta <- function(w) {
+    num <- exp(w) * bv
+    den <- (1 + exp(w)) * (cn * (1 - purity) + cv * purity)
+    num / den
+  }
+  
+  # Simple local linear evaluator
+  eval_line <- function(x, a, b) {
+    a * x + b
+  }
+  
+  # Fixed grid 
+  w    <- -40:40 / 10
+  No.w <- length(w)
+  
+  # True theta values on the grid
+  actual.theta <- theta(w)
+  
+  # In this discrete setting, optimal cut is always -1.8 and 1.8
+  i <- which.min(abs(w + 1.8))  # w[i] ≈ -1.8
+  j <- which.min(abs(w - 1.8))  # w[j] ≈  1.8
+  
+  # Segment 1: [w[1], w[i]]
+  a1 <- (actual.theta[i] - actual.theta[1]) / (w[i] - w[1])
+  b1 <- actual.theta[1] - w[1] * a1
+  
+  # Segment 2: [w[i], w[j]]
+  a2 <- (actual.theta[j] - actual.theta[i]) / (w[j] - w[i])
+  b2 <- actual.theta[i] - w[i] * a2
+  
+  # Segment 3: [w[j], w[No.w]]
+  a3 <- (actual.theta[No.w] - actual.theta[j]) / (w[No.w] - w[j])
+  b3 <- actual.theta[No.w] - w[No.w] * a3
+  
+  # Piecewise approximation
+  approx.theta <- c(
+    eval_line(w[1:i],        a1, b1),
+    eval_line(w[(i+1):j],    a2, b2),
+    eval_line(w[(j+1):No.w], a3, b3)
+  )
+  
+  # Max absolute error
+  diff <- max(abs(actual.theta - approx.theta))
+  
+  # Optional diagnostic plot
+  if (diag.plot) {
+    plot(w, actual.theta, type = "l",
+         ylim = c(0, 1), xlim = c(-5, 5),
+         xlab = "w", ylab = "theta")
+    lines(w, approx.theta, col = 2)
+    abline(v = c(-1.8, 1.8), lty = 2)
+  }
+  
+  list(
+    w.cut = c(w[i], w[j]),           # should be -1.8, 1.8
+    diff  = diff,
+    coef  = c(a1, b1, a2, b2, a3, b3)
+  )
 }
-LinearEvaluate <- function(x,a,b){
-    return(a*x+b)
-}
-LinearApproximate <- function(bv,cv,cn,diag.plot = T){
-    w            <- -40:40/10
-    actual.theta <- theta(w,bv,cv,cn,purity)
-    No.w         <- length(w)
-    diff         <- rep(0,(No.w-3)*(No.w-2)/2)
-    coef         <- matrix(0,ncol=6,nrow = (No.w-3)*(No.w-2)/2)
-    w.cut        <- matrix(0,ncol=2,nrow = (No.w-3)*(No.w-2)/2)
-    k            <- 1
-    approximated.theta <- list()
-    for( i in 2:(length(w)-2)){
-        for(j in (i+1):(length(w)-1) ){
-            w.cut[k,] <- c(w[i],w[j])
-            coef[k,1] <- (actual.theta[i]-actual.theta[1])/(w[i]-w[1])
-            coef[k,2] <- actual.theta[1]-w[1]*coef[k,1]
-            coef[k,3] <- (actual.theta[j]-actual.theta[i])/(w[j]-w[i])
-            coef[k,4] <- actual.theta[i]-w[i]*coef[k,3]
-            coef[k,5] <- (actual.theta[No.w]-actual.theta[j])/(w[No.w]-w[j])
-            coef[k,6] <- actual.theta[No.w]-w[No.w]*coef[k,5]
-            approximated.theta[[k]] <- c(LinearEvaluate(w[1:i],coef[k,1],coef[k,2]),
-                                         LinearEvaluate(w[(i+1):j],coef[k,3],coef[k,4]),
-                                         LinearEvaluate(w[(j+1):No.w],coef[k,5],coef[k,6]))
-            diff[k]  <- max(abs(actual.theta-approximated.theta[[k]]))
-            k        <- k+1
-        }
-    }
-    K <- which.min(diff)
-    if(diag.plot){
-        plot(theta(w,bv,cv,cn,purity)~w, ylim=c(0,1),xlim=c(-5,5),type="l")
-        par(new = T)
-        plot(approximated.theta[[K]]~w,ylim=c(0,1),xlim=c(-5,5),type="l",col=2,ylab = "",xlab ="",main="")
-    }
-    
-    return(list(w.cut = w.cut[K,],diff= diff[K], coef=coef[K,] ))
-}
-
 ###
 CombineReasons <- function(chrom, pos, ind, reason){
     res <- NULL
@@ -181,7 +201,7 @@ for(mutation in 1:No.mutations){
     } else if(length(which(invalid.store == paste(c(2,total.count[mutation],minor.count[mutation]),collapse = "_") )) != 0 ) {
         sample.diff[mutation] <- 1
     } else {
-        res <- LinearApproximate(minor.count[mutation],total.count[mutation],2)
+        res <- LinearApproximate(minor.count[mutation],total.count[mutation],2, purity, diag.plot = FALSE)
         if(res$diff <= 0.1 ){
             sample.coef[mutation,]    <- res$coef
             sample.cutbeta[mutation,]  <- res$w.cut

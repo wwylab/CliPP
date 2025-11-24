@@ -281,45 +281,45 @@ if(length(args) < 5){
             refine <- T
           }
         }
-        # Filter 3: deal with adjacent clusters, i.e., cluster with similar CP values
-        # If the sample has > 2 clusters & if CP values between any two clusters < 0.1
-        # Merge those two clusters together
-        if( No.cls > 2 ){
-          diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
-          if(min(diff) < threshold ){
-            refine <- T
-          }
-        }
-        while(refine){
-          min.ind <- which.min(diff) + 1
-          refine <- F
-          ind     <- c(which(label == suma[min.ind, 1]), which(label == suma[min.ind-1,1]))
-          new.phi <- (suma[min.ind, 2]*suma[min.ind, 3] + 
-                        suma[min.ind-1, 2]*suma[min.ind-1, 3]) / 
-            (suma[min.ind, 2] + suma[min.ind-1, 2])
-          new.label  <- suma[min.ind, 1]
-          phi[ind]   <- new.phi
-          label[ind] <- new.label
-          No.cls     <- No.cls - 1
-          suma <- matrix(NA, ncol = 3, nrow = No.cls)
-          suma[, 3] <- sort(unique(phi),decreasing = F)
-          suma[, 1] <- unlist(lapply(suma[, 3],
-                                     function(y){
-                                       unique(label[which(phi == y)])
-                                     }))
-          suma[, 2] <- unlist(lapply(suma[, 1],
-                                     function(y){
-                                       length(which(label == y))
-                                     }))
-          if( No.cls > 2 ){
-            diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
-            if(min(diff) < threshold ){
-              refine <- T
-            }
-          }
+        # # Filter 3: deal with adjacent clusters, i.e., cluster with similar CP values
+        # # If the sample has > 2 clusters & if CP values between any two clusters < 0.1
+        # # Merge those two clusters together
+        # if( No.cls > 2 ){
+        #   diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
+        #   if(min(diff) < threshold ){
+        #     refine <- T
+        #   }
+        # }
+        # while(refine){
+        #   min.ind <- which.min(diff) + 1
+        #   refine <- F
+        #   ind     <- c(which(label == suma[min.ind, 1]), which(label == suma[min.ind-1,1]))
+        #   new.phi <- (suma[min.ind, 2]*suma[min.ind, 3] + 
+        #                 suma[min.ind-1, 2]*suma[min.ind-1, 3]) / 
+        #     (suma[min.ind, 2] + suma[min.ind-1, 2])
+        #   new.label  <- suma[min.ind, 1]
+        #   phi[ind]   <- new.phi
+        #   label[ind] <- new.label
+        #   No.cls     <- No.cls - 1
+        #   suma <- matrix(NA, ncol = 3, nrow = No.cls)
+        #   suma[, 3] <- sort(unique(phi),decreasing = F)
+        #   suma[, 1] <- unlist(lapply(suma[, 3],
+        #                              function(y){
+        #                                unique(label[which(phi == y)])
+        #                              }))
+        #   suma[, 2] <- unlist(lapply(suma[, 1],
+        #                              function(y){
+        #                                length(which(label == y))
+        #                              }))
+        #   if( No.cls > 2 ){
+        #     diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
+        #     if(min(diff) < threshold ){
+        #       refine <- T
+        #     }
+        #   }
           
           
-        }
+        # }
         # Filter 4: deal with small subclones, i.e., subclonal clusters with a small number of mutations
         # If a subclone has #SNV < 0.05 * total mutaton
         # Merge this subclone with its closest cluster
@@ -608,45 +608,45 @@ if(length(args) < 5){
           refine <- T
         }
       }
-      # Filter 3: deal with adjacent clusters, i.e., cluster with similar CP values
-      # If the sample has > 2 clusters & if CP values between any two clusters < 0.1
-      # Merge those two clusters together
-      if( No.cls > 2 ){
-        diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
-        if(min(diff) < threshold ){
-          refine <- T
-        }
-      }
-      while(refine){
-        min.ind <- which.min(diff) + 1
-        refine <- F
-        ind     <- c(which(label == suma[min.ind, 1]), which(label == suma[min.ind-1,1]))
-        new.phi <- (suma[min.ind, 2]*suma[min.ind, 3] + 
-                      suma[min.ind-1, 2]*suma[min.ind-1, 3]) / 
-          (suma[min.ind, 2] + suma[min.ind-1, 2])
-        new.label  <- suma[min.ind, 1]
-        phi[ind]   <- new.phi
-        label[ind] <- new.label
-        No.cls     <- No.cls - 1
-        suma <- matrix(NA, ncol = 3, nrow = No.cls)
-        suma[, 3] <- sort(unique(phi),decreasing = F)
-        suma[, 1] <- unlist(lapply(suma[, 3],
-                                   function(y){
-                                     unique(label[which(phi == y)])
-                                   }))
-        suma[, 2] <- unlist(lapply(suma[, 1],
-                                   function(y){
-                                     length(which(label == y))
-                                   }))
-        if( No.cls > 2 ){
-          diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
-          if(min(diff) < threshold ){
-            refine <- T
-          }
-        }
+      # # Filter 3: deal with adjacent clusters, i.e., cluster with similar CP values
+      # # If the sample has > 2 clusters & if CP values between any two clusters < 0.1
+      # # Merge those two clusters together
+      # if( No.cls > 2 ){
+      #   diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
+      #   if(min(diff) < threshold ){
+      #     refine <- T
+      #   }
+      # }
+      # while(refine){
+      #   min.ind <- which.min(diff) + 1
+      #   refine <- F
+      #   ind     <- c(which(label == suma[min.ind, 1]), which(label == suma[min.ind-1,1]))
+      #   new.phi <- (suma[min.ind, 2]*suma[min.ind, 3] + 
+      #                 suma[min.ind-1, 2]*suma[min.ind-1, 3]) / 
+      #     (suma[min.ind, 2] + suma[min.ind-1, 2])
+      #   new.label  <- suma[min.ind, 1]
+      #   phi[ind]   <- new.phi
+      #   label[ind] <- new.label
+      #   No.cls     <- No.cls - 1
+      #   suma <- matrix(NA, ncol = 3, nrow = No.cls)
+      #   suma[, 3] <- sort(unique(phi),decreasing = F)
+      #   suma[, 1] <- unlist(lapply(suma[, 3],
+      #                              function(y){
+      #                                unique(label[which(phi == y)])
+      #                              }))
+      #   suma[, 2] <- unlist(lapply(suma[, 1],
+      #                              function(y){
+      #                                length(which(label == y))
+      #                              }))
+      #   if( No.cls > 2 ){
+      #     diff <- suma[2:No.cls,3]-suma[1:(No.cls-1),3]
+      #     if(min(diff) < threshold ){
+      #       refine <- T
+      #     }
+      #   }
         
         
-      }
+      # }
       # Filter 4: deal with small subclones, i.e., subclonal clusters with a small number of mutations
       # If a subclone has #SNV < 0.05 * total mutaton
       # Merge this subclone with its closest cluster

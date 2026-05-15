@@ -614,14 +614,9 @@ extern "C" __global__ void compute_ab_kernel(
         tag4 = 1.0;
     }
 
-    const double theta_eps = 1.0e-12;
-    if(!(theta > theta_eps) || !(theta < 1.0 - theta_eps)){
+    if(theta >= 1.0){
+        theta = 0.99;
         problematic_flags[i] = 1;
-        if(!(theta > theta_eps)){
-            theta = theta_eps;
-        }else{
-            theta = 1.0 - theta_eps;
-        }
     }
 
     const double sqrt_n = sqrt(n[i]);
@@ -732,13 +727,13 @@ extern "C" __global__ void update_eta_tau_kernel(
 
     const int i = blockIdx.x;
     if(i >= n_mut - 1){
-        if(threadIdx.x == 0) row_residual_max[i] = 0.0;
+        if(threadIdx.x == 0) row_residual_max[i] = -CLIPP_DBL_MAX;
         return;
     }
 
     const long long start = pair_start_ll(i, n_mut);
     const int row_len = n_mut - i - 1;
-    double local_max = 0.0;
+    double local_max = -CLIPP_DBL_MAX;
 
     for(int offset = threadIdx.x; offset < row_len; offset += blockDim.x){
         const int j = i + 1 + offset;
@@ -776,8 +771,7 @@ extern "C" __global__ void update_eta_tau_kernel(
         const double residual_i = pair_diff - eta_value;
         tau[p] = tau_old - alpha * residual_i;
 
-        const double abs_residual_i = fabs(residual_i);
-        if(abs_residual_i > local_max) local_max = abs_residual_i;
+        if(residual_i > local_max) local_max = residual_i;
     }
 
     shared[threadIdx.x] = local_max;
@@ -1047,11 +1041,11 @@ int postprocess_cuda_result(
     double Lambda,
     int k,
     int least_mut,
+    double post_th,
     double least_diff,
     const std::vector<double>& n,
     const std::vector<double>& phi_hat,
-    const std::vector<unsigned char>& fused_edges,
-    const std::vector<double>* eta_new,
+    std::vector<double>& eta_new,
     const std::vector<long long>& pair_start,
     const std::vector<int>& problematic_snv_flags,
     std::string& preliminary_folder)
@@ -1064,15 +1058,39 @@ int postprocess_cuda_result(
         if(problematic_snv_flags[i]) problematic_snvs.push_back(i);
     }
 
-    std::vector<int> group_size;
-    std::vector<int> class_label =
-        build_class_labels_from_pairs(
-            No_mutation,
-            pair_start,
-            [&](long long pair_index) { return fused_edges[pair_index] != 0; },
-            group_size);
+    for(long long pair_index = 0; pair_index < static_cast<long long>(eta_new.size()); pair_index++){
+        if(fabs(eta_new[pair_index]) <= post_th) eta_new[pair_index] = 0.0;
+    }
 
-    int temp_size = minimum_positive_group_size(group_size, No_mutation);
+    std::vector<int> class_label(No_mutation);
+    std::fill(class_label.begin(), class_label.end(), -1);
+    class_label[0] = 0;
+
+    std::vector<int> group_size;
+    group_size.push_back(1);
+
+    int labl = 1;
+
+    for(i = 0; i < No_mutation; i++){
+        for(j = 0; j < i; j++){
+            const long long pair_index = pair_start[j] + i - j - 1;
+            if(eta_new[pair_index] == 0.0){
+                class_label[i] = class_label[j];
+                group_size[class_label[j]] = group_size[class_label[j]] + 1;
+                break;
+            }
+        }
+        if(class_label[i] == -1){
+            class_label[i] = labl;
+            labl += 1;
+            group_size.push_back(1);
+        }
+    }
+
+    int temp_size = No_mutation;
+    for(unsigned int ii = 0; ii < group_size.size(); ii++){
+        if(group_size[ii] > 0 && temp_size > group_size[ii]) temp_size = group_size[ii];
+    }
 
     std::vector<int> tmp_grp;
     for(unsigned int ii = 0; ii < group_size.size(); ii++){
@@ -1083,17 +1101,19 @@ int postprocess_cuda_result(
 
     int refine = 0;
 
-    if(No_mutation > 1 && double(temp_size) < least_mut) refine = 1;
+    if(double(temp_size) < least_mut) refine = 1;
+    MatrixXd diff;
+    MatrixXd tmp_diff;
     if(refine == 1){
-        if(eta_new == nullptr){
-            std::cerr << "Internal error: refinement needs eta values, but they were not copied from CUDA." << std::endl;
-            return kCliPPError;
+        diff.resize(No_mutation, No_mutation);
+        for(i = 0; i < No_mutation - 1; i++){
+            const long long start = pair_start[i];
+            for(j = i + 1; j < No_mutation; j++){
+                const long long pair_index = start + j - i - 1;
+                diff(i, j) = eta_new[pair_index];
+            }
         }
-    }
-    std::vector<double> tmp_diff(No_mutation, 0.0);
-    std::unique_ptr<CudaPackedPairDiff> diff;
-    if(refine == 1){
-        diff.reset(new CudaPackedPairDiff(*eta_new, pair_start));
+        tmp_diff.resize(No_mutation, 1);
     }
     while(refine == 1){
         refine = 0;
@@ -1106,24 +1126,58 @@ int postprocess_cuda_result(
         }
 
         for(unsigned int ii = 0; ii < tmp_col.size(); ii++){
-            const int target = tmp_col[ii];
-            for(int jj = 0; jj < No_mutation; jj++){
-                tmp_diff[jj] = (jj == target) ? 100.0 : fabs(diff->value(jj, target));
-            }
+            if(tmp_col[ii] != 0 && tmp_col[ii] != No_mutation - 1){
+                for(int jj = 0; jj < tmp_col[ii]; jj++){
+                    tmp_diff(jj, 0) = fabs(diff(jj, tmp_col[ii]));
+                }
+                tmp_diff(tmp_col[ii], 0) = 100.0;
 
-            for(unsigned int jj = 0; jj < tmp_col.size(); jj++){
-                tmp_diff[tmp_col[jj]] += 100.0;
-            }
+                for(int jj = tmp_col[ii] + 1; jj < No_mutation; jj++){
+                    tmp_diff(jj, 0) = fabs(diff(tmp_col[ii], jj));
+                }
 
-            for(int jj = 0; jj < No_mutation; jj++){
-                if(jj != target) diff->set(jj, target, tmp_diff[jj]);
+                for(unsigned int jj = 0; jj < tmp_col.size(); jj++){
+                    tmp_diff(tmp_col[jj], 0) = tmp_diff(tmp_col[jj], 0) + 100.0;
+                }
+
+                for(unsigned int jj = 0; jj < tmp_col.size(); jj++){
+                    diff(jj, tmp_col[ii]) = tmp_diff(jj, 0);
+                }
+
+                for(int jj = tmp_col[ii] + 1; jj < No_mutation; jj++){
+                    diff(tmp_col[ii], jj) = tmp_diff(jj, 0);
+                }
+            }else {
+                if(tmp_col[ii] == 0){
+                    tmp_diff(0, 0) = 100.0;
+                    for(int jj = 1; jj < No_mutation; jj++){
+                        tmp_diff(jj, 0) = fabs(diff(0, jj));
+                    }
+                    for(unsigned int jj = 0; jj < tmp_col.size(); jj++){
+                        tmp_diff(tmp_col[jj], 0) = tmp_diff(tmp_col[jj], 0) + 100.0;
+                    }
+                    for(int jj = 1; jj < No_mutation; jj++){
+                        diff(0, jj) = tmp_diff(jj, 0);
+                    }
+                }else{
+                    for(int jj = 0; jj < No_mutation - 1; jj++){
+                        tmp_diff(jj, 0) = fabs(diff(jj, No_mutation - 1));
+                    }
+                    tmp_diff(No_mutation - 1, 0) = 100.0;
+                    for(unsigned int jj = 0; jj < tmp_col.size(); jj++){
+                        tmp_diff(tmp_col[jj], 0) = tmp_diff(tmp_col[jj], 0) + 100.0;
+                    }
+                    for(int jj = 0; jj < No_mutation - 1; jj++){
+                        diff(jj, No_mutation - 1) = tmp_diff(jj, 0);
+                    }
+                }
             }
 
             int ind = 0;
             temp = 100000000.0;
             for(int jj= 0; jj < No_mutation; jj++){
-                if(tmp_diff[jj] < temp){
-                    temp = tmp_diff[jj];
+                if(tmp_diff(jj, 0) < temp){
+                    temp = tmp_diff(jj, 0);
                     ind = jj;
                 }
             }
@@ -1132,7 +1186,10 @@ int postprocess_cuda_result(
             group_size[class_label[tmp_col[ii]]] = group_size[class_label[tmp_col[ii]]] + 1;
         }
 
-        temp_size = minimum_positive_group_size(group_size, No_mutation);
+        temp_size = No_mutation;
+        for(unsigned int ii = 0; ii < group_size.size(); ii++){
+            if(group_size[ii] > 0 && temp_size > group_size[ii]) temp_size = group_size[ii];
+        }
 
         tmp_grp.clear();
         for(unsigned int ii = 0; ii < group_size.size(); ii++){
@@ -1141,7 +1198,7 @@ int postprocess_cuda_result(
             }
         }
         refine = 0;
-        if (No_mutation > 1 && temp_size < least_mut) refine = 1;
+        if (temp_size < least_mut) refine = 1;
     }
 
     std::vector<int> labels = class_label;
@@ -1530,7 +1587,7 @@ int CliPPIndividualCUDA(
             program.launch("update_eta_tau_kernel", dim3(No_mutation), dim3(kCudaBlockSize), args, kCudaBlockSize * sizeof(double), stream);
             residual = reduce_device_max(program, d_row_residual_max.get(), No_mutation, d_reduce_tmp_a, d_reduce_tmp_b, stream);
         }else{
-            residual = 0.0;
+            residual = -100000.0;
         }
 
         alpha = alpha * rho;
@@ -1540,27 +1597,10 @@ int CliPPIndividualCUDA(
     std::cout << std::endl;
 #endif
 
-    std::vector<unsigned char> fused_host;
     std::vector<double> eta_host;
 
     if(pair_count > 0){
-        GpuBuffer<unsigned char> d_fused(static_cast<size_t>(pair_count));
-        long long count_ll = pair_count;
-        double* eta_ptr = d_eta.get();
-        unsigned char* fused_ptr = d_fused.get();
-        void* args[] = { &count_ll, &post_th, &eta_ptr, &fused_ptr };
-        program.launch("threshold_eta_flag_kernel", dim3(blocks_for(pair_count)), dim3(kCudaBlockSize), args, 0, stream);
-        copy_to_host(fused_host, d_fused, stream);
-
-        std::vector<int> initial_group_size;
-        (void)build_class_labels_from_pairs(
-            No_mutation,
-            pair_start,
-            [&](long long pair_index) { return fused_host[pair_index] != 0; },
-            initial_group_size);
-        if(minimum_positive_group_size(initial_group_size, No_mutation) < least_mut){
-            copy_to_host(eta_host, d_eta, stream);
-        }
+        copy_to_host(eta_host, d_eta, stream);
     }
 
     std::vector<int> problematic_flags;
@@ -1571,11 +1611,11 @@ int CliPPIndividualCUDA(
         Lambda,
         k,
         least_mut,
+        post_th,
         least_diff,
         n,
         phi_hat,
-        fused_host,
-        eta_host.empty() ? nullptr : &eta_host,
+        eta_host,
         pair_start,
         problematic_flags,
         preliminary_folder);

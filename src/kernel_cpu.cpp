@@ -645,7 +645,7 @@ int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_
     return 0;
 }
 
-
+#ifndef USE_CUDA
 extern "C" {
     void CliPP(int No_mutation, int* r, int *n, int* minor, int* total, double ploidy,
 	      double* Lambda_list, int Lambda_num, double alpha, double rho, double gamma, int Run_limit, double precision,
@@ -655,3 +655,4 @@ extern "C" {
 	CliPPCPP(No_mutation, r, n, minor, total, ploidy, Lambda_list, Lambda_num, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef_1d, wcut_1d, purity, preliminary);
     }
 }
+#endif

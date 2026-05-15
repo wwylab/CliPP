@@ -2,8 +2,6 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import sys
 import os
-import importlib.util
-import ctypes.util
 from pathlib import Path
 
 #if not (sys.version_info[0] == 3 and sys.version_info[1] >= 5 and sys.version_info[2] >= 1):
@@ -14,6 +12,8 @@ if not (version_morph >= version_base):
     sys.exit(-1)
 
 def _nvidia_package_paths(module_name):
+    import importlib.util
+
     spec = importlib.util.find_spec(module_name)
     if spec is None or not spec.submodule_search_locations:
         return None
@@ -27,6 +27,8 @@ def _nvidia_package_paths(module_name):
 
 
 def _find_libcuda_dir():
+    import ctypes.util
+
     found = ctypes.util.find_library("cuda")
     if found:
         found_path = Path(found)
@@ -57,21 +59,54 @@ def _env_flag(name):
     if normalized in {"0", "false", "no", "off"}:
         return False
 
-    sys.stderr.write(f"Error message: {name} must be one of 1/0, true/false, yes/no, or on/off.\n")
+    sys.stderr.write("Error message: %s must be one of 1/0, true/false, yes/no, or on/off.\n" % name)
     sys.exit(-1)
 
 
-cuda_runtime_paths = _nvidia_package_paths("nvidia.cuda_runtime")
-cuda_nvrtc_paths = _nvidia_package_paths("nvidia.cuda_nvrtc")
-libcuda_dir = _find_libcuda_dir()
-cuda_build_available = (
-    cuda_runtime_paths is not None
-    and cuda_nvrtc_paths is not None
-    and libcuda_dir is not None
-)
+def _detect_cuda_build():
+    libcuda_dir = _find_libcuda_dir()
+    if libcuda_dir is None:
+        return {
+            "available": False,
+            "runtime_paths": None,
+            "nvrtc_paths": None,
+            "libcuda_dir": None,
+            "missing": ["libcuda"],
+        }
+
+    cuda_runtime_paths = _nvidia_package_paths("nvidia.cuda_runtime")
+    cuda_nvrtc_paths = _nvidia_package_paths("nvidia.cuda_nvrtc")
+
+    missing = []
+    if cuda_runtime_paths is None:
+        missing.append("nvidia-cuda-runtime-cu12")
+    if cuda_nvrtc_paths is None:
+        missing.append("nvidia-cuda-nvrtc-cu12")
+    return {
+        "available": len(missing) == 0,
+        "runtime_paths": cuda_runtime_paths,
+        "nvrtc_paths": cuda_nvrtc_paths,
+        "libcuda_dir": libcuda_dir,
+        "missing": missing,
+    }
+
 
 requested_cuda = _env_flag("CLIPP_USE_CUDA")
-use_cuda = cuda_build_available if requested_cuda is None else requested_cuda
+cuda_info = None
+use_cuda = False
+
+if requested_cuda is True:
+    cuda_info = _detect_cuda_build()
+    if not cuda_info["available"]:
+        sys.stderr.write(
+            "Error message: CUDA build requested but CUDA build dependencies were not found. "
+            "Missing: %s.\n" % ", ".join(cuda_info["missing"])
+        )
+        sys.exit(-1)
+    use_cuda = True
+elif requested_cuda is None:
+    cuda_info = _detect_cuda_build()
+    use_cuda = cuda_info["available"]
 
 include_dirs = ['eigen-3.4.0']
 extra_compile_args = ['-O3', '-std=c++17']
@@ -83,17 +118,16 @@ runtime_library_dirs = []
 sources = ['./src/kernel_cpu.cpp']
 
 if use_cuda:
-    if not cuda_build_available:
-        sys.stderr.write(
-            "Error message: CUDA build requested but CUDA build dependencies were not found. "
-            "Need libcuda plus the nvidia-cuda-runtime-cu12 and nvidia-cuda-nvrtc-cu12 Python packages.\n"
-        )
-        sys.exit(-1)
+    if cuda_info is None:
+        cuda_info = _detect_cuda_build()
 
-    cuda_runtime_include, cuda_runtime_lib = cuda_runtime_paths
-    cuda_nvrtc_include, cuda_nvrtc_lib = cuda_nvrtc_paths
+    cuda_runtime_include, cuda_runtime_lib = cuda_info["runtime_paths"]
+    cuda_nvrtc_include, cuda_nvrtc_lib = cuda_info["nvrtc_paths"]
+    libcuda_dir = cuda_info["libcuda_dir"]
 
     include_dirs.extend([str(cuda_runtime_include), str(cuda_nvrtc_include)])
+    import importlib.util
+
     triton_spec = importlib.util.find_spec("triton")
     if triton_spec is not None and triton_spec.origin:
         triton_cuda_include = Path(triton_spec.origin).parent / "backends" / "nvidia" / "include"

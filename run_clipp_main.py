@@ -10,6 +10,8 @@ if not (version_morph >= version_base):
     sys.exit(-1)
 
 import argparse
+import ctypes
+import glob
 import subprocess
 import shutil
 import time
@@ -20,6 +22,42 @@ sys.path.insert(0, os.path.join(current_dir, "src"))
 from run_kernel_nosub import run_clipp_nosub
 from run_kernel_sub import run_clipp_sub
 from penalty_selection import run_lambda_selection
+
+
+def _find_clipp_library():
+    pattern = os.path.join(current_dir, "build", "*", "CliPP*%s*.so" % (sys.platform))
+    matches = glob.glob(pattern)
+    if not matches:
+        return None
+    return max(matches, key=os.path.getmtime)
+
+
+def warmup_cuda_if_available():
+    if os.environ.get("CLIPP_FORCE_CPU"):
+        return
+
+    clipp_lib_path = _find_clipp_library()
+    if clipp_lib_path is None:
+        return
+
+    try:
+        clipp_lib = ctypes.CDLL(clipp_lib_path)
+        warmup = getattr(clipp_lib, "CliPPWarmupCUDA", None)
+        if warmup is None:
+            return
+
+        warmup.argtypes = []
+        warmup.restype = ctypes.c_int
+
+        print("Warming up CUDA...")
+        status = warmup()
+        if status == 0:
+            print("CUDA warmup finished.")
+        else:
+            print("CUDA warmup skipped; CUDA backend is unavailable at runtime.")
+    except Exception as err:
+        print("CUDA warmup skipped: %s" % err)
+
 
 parser = argparse.ArgumentParser()
 
@@ -77,6 +115,8 @@ if not os.path.exists(result_dir):
 path_for_preprocess = os.path.join(result_dir, args.preprocess)
 path_for_preliminary = os.path.join(result_dir, "preliminary_result")
 path_for_final = os.path.join(result_dir, final_result)
+
+warmup_cuda_if_available()
 
 # Run preprocessing
 print("Running preprocessing...")

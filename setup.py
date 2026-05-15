@@ -1,6 +1,10 @@
 from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext
 import sys
 import os
+import importlib.util
+import ctypes.util
+from pathlib import Path
 
 #if not (sys.version_info[0] == 3 and sys.version_info[1] >= 5 and sys.version_info[2] >= 1):
 version_morph = sys.version_info[0]*10000+sys.version_info[1]*100+sys.version_info[2]
@@ -9,16 +13,117 @@ if not (version_morph >= version_base):
     sys.stderr.write("Error message: CliPP can only run with python >=3.5.1\n")
     sys.exit(-1)
 
+def _nvidia_package_paths(module_name):
+    spec = importlib.util.find_spec(module_name)
+    if spec is None or not spec.submodule_search_locations:
+        return None
+
+    root = Path(next(iter(spec.submodule_search_locations)))
+    include_dir = root / "include"
+    lib_dir = root / "lib"
+    if not include_dir.is_dir() or not lib_dir.is_dir():
+        return None
+    return include_dir, lib_dir
+
+
+def _find_libcuda_dir():
+    found = ctypes.util.find_library("cuda")
+    if found:
+        found_path = Path(found)
+        if found_path.is_absolute() and found_path.parent.is_dir():
+            return found_path.parent
+
+    for candidate in (
+        "/usr/lib/x86_64-linux-gnu",
+        "/usr/lib64",
+        "/usr/local/cuda/lib64",
+        "/usr/local/cuda/lib",
+    ):
+        candidate_path = Path(candidate)
+        if (candidate_path / "libcuda.so").exists() or (candidate_path / "libcuda.so.1").exists():
+            return candidate_path
+
+    return None
+
+
+def _env_flag(name):
+    value = os.environ.get(name)
+    if value is None or value == "":
+        return None
+
+    normalized = value.lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+
+    sys.stderr.write(f"Error message: {name} must be one of 1/0, true/false, yes/no, or on/off.\n")
+    sys.exit(-1)
+
+
+cuda_runtime_paths = _nvidia_package_paths("nvidia.cuda_runtime")
+cuda_nvrtc_paths = _nvidia_package_paths("nvidia.cuda_nvrtc")
+libcuda_dir = _find_libcuda_dir()
+cuda_build_available = (
+    cuda_runtime_paths is not None
+    and cuda_nvrtc_paths is not None
+    and libcuda_dir is not None
+)
+
+requested_cuda = _env_flag("CLIPP_USE_CUDA")
+use_cuda = cuda_build_available if requested_cuda is None else requested_cuda
+
+include_dirs = ['eigen-3.4.0']
+extra_compile_args = ['-O3', '-std=c++17']
+extra_link_args = ['-O3']
+define_macros = []
+library_dirs = []
+libraries = []
+runtime_library_dirs = []
+sources = ['./src/kernel_cpu.cpp']
+
+if use_cuda:
+    if not cuda_build_available:
+        sys.stderr.write(
+            "Error message: CUDA build requested but CUDA build dependencies were not found. "
+            "Need libcuda plus the nvidia-cuda-runtime-cu12 and nvidia-cuda-nvrtc-cu12 Python packages.\n"
+        )
+        sys.exit(-1)
+
+    cuda_runtime_include, cuda_runtime_lib = cuda_runtime_paths
+    cuda_nvrtc_include, cuda_nvrtc_lib = cuda_nvrtc_paths
+
+    include_dirs.extend([str(cuda_runtime_include), str(cuda_nvrtc_include)])
+    triton_spec = importlib.util.find_spec("triton")
+    if triton_spec is not None and triton_spec.origin:
+        triton_cuda_include = Path(triton_spec.origin).parent / "backends" / "nvidia" / "include"
+        if triton_cuda_include.is_dir():
+            include_dirs.append(str(triton_cuda_include))
+    define_macros.append(("USE_CUDA", "1"))
+    libraries.append("cuda")
+    library_dirs.append(str(libcuda_dir))
+    runtime_library_dirs.extend([str(cuda_runtime_lib), str(cuda_nvrtc_lib)])
+    extra_link_args.extend([
+        str(cuda_runtime_lib / "libcudart.so.12"),
+        str(cuda_nvrtc_lib / "libnvrtc.so.12"),
+    ])
+    sources.append('./src/kernel_cuda.cpp')
+
 if sys.platform.startswith('darwin'):
     os.environ['CC'] = "clang"
     os.environ['CXX'] = "clang++"
-    ext_modules=[Extension('CliPP', ['./src/kernel.cpp'], include_dirs=['eigen-3.4.0'], extra_compile_args = ['-O3'], extra_link_args = ['-O3']),]
+    ext_modules=[Extension('CliPP', sources, include_dirs=include_dirs, define_macros=define_macros, extra_compile_args=extra_compile_args, extra_link_args=extra_link_args),]
 else:
-    ext_modules=[Extension('CliPP', ['./src/kernel.cpp'], include_dirs=['eigen-3.4.0'], extra_compile_args = ['-O3', '-fopenmp'], extra_link_args = ['-O3', '-fopenmp']),]
+    ext_modules=[Extension('CliPP', sources, include_dirs=include_dirs, define_macros=define_macros, library_dirs=library_dirs, libraries=libraries, runtime_library_dirs=runtime_library_dirs, extra_compile_args=extra_compile_args + ['-fopenmp'], extra_link_args=extra_link_args + ['-fopenmp']),]
+
+
+class BuildExt(build_ext):
+    def finalize_options(self):
+        super().finalize_options()
+        self.force = True
 
     
 setup(
     name="CliPP",
-    ext_modules=ext_modules)
-
-
+    ext_modules=ext_modules,
+    cmdclass={"build_ext": BuildExt})

@@ -21,17 +21,24 @@ import ctypes
 import glob
 
 
+def _find_clipp_library(current_folder):
+    pattern = os.path.join(current_folder, "../build/*/CliPP*%s*.so" % (sys.platform))
+    matches = glob.glob(pattern)
+    if not matches:
+        return None
+    return max(matches, key=os.path.getmtime)
+
+
 def run_clipp_nosub(prefix, preliminary_result, lambda_list):
     if not os.path.exists(preliminary_result):
         os.makedirs(preliminary_result)
         
     current_folder = os.path.dirname(os.path.abspath(__file__))
-    clipp_lib_path = glob.glob(os.path.join(current_folder, "../build/*/CliPP*%s*.so" %(sys.platform)))
+    clipp_lib_path = _find_clipp_library(current_folder)
     if not clipp_lib_path:
         sys.stderr.write("Cannot find shared lib. Make sure run run python setup.py build first.\n")
         sys.exit(0)
 
-    clipp_lib_path = clipp_lib_path[0]
     if not os.path.isfile(clipp_lib_path):
         sys.stderr.write("Cannot find shared lib. Make sure run run python setup.py build first.\n")
         sys.exit(0)

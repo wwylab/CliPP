@@ -25,8 +25,13 @@ from penalty_selection import run_lambda_selection
 
 
 def _find_clipp_library():
-    pattern = os.path.join(current_dir, "build", "*", "CliPP*%s*.so" % (sys.platform))
-    matches = glob.glob(pattern)
+    patterns = [
+        os.path.join(current_dir, "CliPP*%s*.so" % (sys.platform)),
+        os.path.join(current_dir, "build", "*", "CliPP*%s*.so" % (sys.platform)),
+    ]
+    matches = []
+    for pattern in patterns:
+        matches.extend(glob.glob(pattern))
     if not matches:
         return None
     return max(matches, key=os.path.getmtime)
@@ -147,7 +152,7 @@ if not args.subsampling:
     run_clipp_nosub(path_for_preprocess, path_for_preliminary, lambda_list)
     end = time.time()
     elapsed_time = end - start
-    print("\nElapsed time: %.6fsec" % elapsed_time + "\n")
+    print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
 	
     # Run postprocessing
 
@@ -183,7 +188,7 @@ else:
  
     end = time.time()
     elapsed_time = end - start
-    print("\nElapsed time: %.6fsec" % elapsed_time + "\n")
+    print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
     
     # Run postprocessing
     p_postprocess = subprocess.Popen(["Rscript", 

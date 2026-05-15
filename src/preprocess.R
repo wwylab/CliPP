@@ -188,6 +188,16 @@ minor.count[minor.count == 0] <- 1
 valid.ind      <- intersect(which(minor.count>0),which(total.count>0))
 drop.ind       <- setdiff(1:length(minor.read),valid.ind)
 dropped.SNV    <- append(dropped.SNV,CombineReasons(mutation.chrom, mutation.pos, drop.ind, "The SNV has negative multiplicities."))
+if(length(valid.ind) < VALID.CONT ){
+    stop(sprintf('The sample with SNV %s has less than %d SNVs that have positive copy number and multiplicity.',snv.file,VALID.CONT))
+}
+mutation.chrom <- mutation.chrom[valid.ind]
+mutation.pos   <- mutation.pos[valid.ind]
+minor.read     <- minor.read[valid.ind]
+total.read     <- total.read[valid.ind]
+minor.count    <- minor.count[valid.ind]
+total.count    <- total.count[valid.ind]
+No.mutations   <- length(valid.ind)
 
 sample.coef    <- matrix(0,nrow = No.mutations, ncol = 6)
 sample.cutbeta <- matrix(0,nrow = No.mutations, ncol = 2)

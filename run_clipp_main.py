@@ -42,17 +42,19 @@ def _find_clipp_library():
 
 def warmup_cuda_if_available():
     if os.environ.get("CLIPP_FORCE_CPU"):
-        return
+        return False
 
     clipp_lib_path = _find_clipp_library()
     if clipp_lib_path is None:
-        return
+        print("CUDA warmup skipped; no CliPP shared library was found.")
+        return False
 
     try:
         clipp_lib = ctypes.CDLL(clipp_lib_path)
         warmup = getattr(clipp_lib, "CliPPWarmupCUDA", None)
         if warmup is None:
-            return
+            print("CUDA warmup skipped; CUDA backend is not built.")
+            return False
 
         warmup.argtypes = []
         warmup.restype = ctypes.c_int
@@ -61,10 +63,13 @@ def warmup_cuda_if_available():
         status = warmup()
         if status == 0:
             print("CUDA warmup finished.")
+            return True
         else:
             print("CUDA warmup skipped; CUDA backend is unavailable at runtime.")
+            return False
     except Exception as err:
         print("CUDA warmup skipped: %s" % err)
+        return False
 
 
 def count_preprocessed_snvs(preprocess_dir):
@@ -93,8 +98,12 @@ def select_backend_after_preprocess(preprocess_dir):
         )
         return snv_count
 
-    print("CliPP backend auto-selection: CUDA eligible (preprocessed SNVs > %d)." % CUDA_MIN_SNV_COUNT)
-    warmup_cuda_if_available()
+    print("CliPP backend auto-selection: checking CUDA (preprocessed SNVs > %d)." % CUDA_MIN_SNV_COUNT)
+    if warmup_cuda_if_available():
+        print("CliPP backend auto-selection: CUDA.")
+    else:
+        os.environ["CLIPP_FORCE_CPU"] = "1"
+        print("CliPP backend auto-selection: CPU (CUDA is unavailable).")
     return snv_count
 
 

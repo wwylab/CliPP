@@ -155,51 +155,40 @@ if(No.cnLines == 0){
     stop(sprintf('The sample with SNV %s does not have valid copy number status.', snv.file))
 }
 
-if(requireNamespace("data.table", quietly = TRUE)){
-    snv.dt <- data.table::data.table(
-        mut_id = seq_len(No.mutations),
-        chromosome_index = mutation.chrom,
-        position = mutation.pos
-    )
+if (!requireNamespace("data.table", quietly = TRUE)) {
+    stop("The data.table package is required for fast CNA interval matching.")
+}
 
-    cn.dt <- data.table::as.data.table(cn.tmp)
-    cn.dt[, seg_id := .I]
+snv.dt <- data.table::data.table(
+    mut_id = seq_len(No.mutations),
+    chromosome_index = mutation.chrom,
+    position = mutation.pos
+)
 
-    hits <- cn.dt[
-        snv.dt,
-        on = .(
-            chromosome_index,
-            start_position <= position,
-            end_position >= position
-        ),
-        nomatch = 0,
-        allow.cartesian = TRUE
-    ]
+cn.dt <- data.table::as.data.table(cn.tmp)
+cn.dt[, seg_id := .I]
 
-    # Keep the same behavior as the original loop: if multiple CNA segments
-    # match one SNV, use the first matching CNA row.
-    if(nrow(hits) > 0){
-        data.table::setorder(hits, mut_id, seg_id)
-        hits <- hits[, .SD[1], by = mut_id]
-    }
+hits <- cn.dt[
+    snv.dt,
+    on = .(
+        chromosome_index,
+        start_position <= position,
+        end_position >= position
+    ),
+    nomatch = 0,
+    allow.cartesian = TRUE
+]
 
-    mut.cna.id <- rep(-1L, No.mutations)
-    if(nrow(hits) > 0){
-        mut.cna.id[hits$mut_id] <- hits$seg_id
-    }
-}else{
-    mut.cna.id <- unlist(lapply(seq_len(No.mutations), function(x){
-        ret.val <- -1
-        for(i in seq_len(No.cnLines)){
-            if( mutation.chrom[x] == cn.tmp[i, "chromosome_index"]
-                && mutation.pos[x] >= cn.tmp[i, "start_position"]
-                && mutation.pos[x] <= cn.tmp[i, "end_position"]){
-                ret.val <- i
-                break
-            }
-        }
-        return(ret.val)
-    }))
+# Keep the same behavior as the original loop:
+# if multiple CNA segments match one SNV, use the first matching CNA row.
+if (nrow(hits) > 0) {
+    data.table::setorder(hits, mut_id, seg_id)
+    hits <- hits[, .SD[1], by = mut_id]
+}
+
+mut.cna.id <- rep(-1L, No.mutations)
+if (nrow(hits) > 0) {
+    mut.cna.id[hits$mut_id] <- hits$seg_id
 }
 valid.ind      <- which(mut.cna.id > 0)
 drop.ind       <- setdiff(1:length(minor.read),valid.ind)

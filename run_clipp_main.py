@@ -24,6 +24,9 @@ from run_kernel_sub import run_clipp_sub
 from penalty_selection import run_lambda_selection
 
 
+CUDA_MIN_SNV_COUNT = 1000
+
+
 def _find_clipp_library():
     patterns = [
         os.path.join(current_dir, "CliPP*%s*.so" % (sys.platform)),
@@ -62,6 +65,37 @@ def warmup_cuda_if_available():
             print("CUDA warmup skipped; CUDA backend is unavailable at runtime.")
     except Exception as err:
         print("CUDA warmup skipped: %s" % err)
+
+
+def count_preprocessed_snvs(preprocess_dir):
+    r_path = os.path.join(preprocess_dir, "r.txt")
+    try:
+        with open(r_path, "r") as handle:
+            return sum(1 for line in handle if line.strip() != "")
+    except OSError as err:
+        raise RuntimeError("Cannot read preprocessed SNV count from %s: %s" % (r_path, err))
+
+
+def select_backend_after_preprocess(preprocess_dir):
+    snv_count = count_preprocessed_snvs(preprocess_dir)
+    print("Preprocessed SNVs: %d" % snv_count)
+
+    if os.environ.get("CLIPP_FORCE_CPU"):
+        print("CliPP backend auto-selection: CPU (CLIPP_FORCE_CPU is set).")
+        return snv_count
+
+    if snv_count <= CUDA_MIN_SNV_COUNT:
+        os.environ["CLIPP_FORCE_CPU"] = "1"
+        print(
+            "CliPP backend auto-selection: CPU "
+            "(preprocessed SNVs <= %d; CUDA requires > %d)."
+            % (CUDA_MIN_SNV_COUNT, CUDA_MIN_SNV_COUNT)
+        )
+        return snv_count
+
+    print("CliPP backend auto-selection: CUDA eligible (preprocessed SNVs > %d)." % CUDA_MIN_SNV_COUNT)
+    warmup_cuda_if_available()
+    return snv_count
 
 
 parser = argparse.ArgumentParser()
@@ -121,8 +155,6 @@ path_for_preprocess = os.path.join(result_dir, args.preprocess)
 path_for_preliminary = os.path.join(result_dir, "preliminary_result")
 path_for_final = os.path.join(result_dir, final_result)
 
-warmup_cuda_if_available()
-
 # Run preprocessing
 print("Running preprocessing...")
 p_preprocess = subprocess.Popen(["Rscript", 
@@ -141,6 +173,7 @@ if "error" in _stderr.decode().strip().lower():
     print(_stderr.decode().strip())
     sys.exit(-1)
 print("Preprocessing finished.")
+select_backend_after_preprocess(path_for_preprocess)
 
 run_postprocess = os.path.join(current_dir, "src/postprocess.R")
 # run_lambda_selection = os.path.join(current_dir, "src/penalty_selection.py")

@@ -115,7 +115,7 @@ define_macros = []
 library_dirs = []
 libraries = []
 runtime_library_dirs = []
-sources = ['./src/kernel_cpu.cpp']
+sources = ['./src/kernel_cpu.cpp', './src/kernel_common.cpp', './src/kernel_dispatch.cpp']
 
 if use_cuda:
     if cuda_info is None:
@@ -141,7 +141,7 @@ if use_cuda:
         str(cuda_runtime_lib / "libcudart.so.12"),
         str(cuda_nvrtc_lib / "libnvrtc.so.12"),
     ])
-    sources.append('./src/kernel_cuda.cpp')
+    sources.append('./src/kernel_cuda_backend.cpp')
 
 if sys.platform.startswith('darwin'):
     os.environ['CC'] = "clang"

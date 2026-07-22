@@ -6,15 +6,13 @@
 #include <algorithm>
 //#include <chrono>
 #include <Eigen/Dense>
+#include "kernel_common.h"
 #ifdef _OPENMP 
 #include <omp.h>
 #endif
 
 using Eigen::MatrixXd;
 using Eigen::MatrixXi;
-using Eigen::VectorXi;
-using Eigen::VectorXd;
-using Eigen::ArrayXi;
 
 using namespace std;
 
@@ -643,15 +641,4 @@ int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_
 
     
     return 0;
-}
-
-
-extern "C" {
-    void CliPP(int No_mutation, int* r, int *n, int* minor, int* total, double ploidy,
-	      double* Lambda_list, int Lambda_num, double alpha, double rho, double gamma, int Run_limit, double precision,
-	      int control_large, int least_mut, double post_th, double least_diff,
-	      double* coef_1d, double* wcut_1d, double purity, char* preliminary){
-
-	CliPPCPP(No_mutation, r, n, minor, total, ploidy, Lambda_list, Lambda_num, alpha, rho, gamma, Run_limit, precision, control_large, least_mut, post_th, least_diff, coef_1d, wcut_1d, purity, preliminary);
-    }
 }

@@ -21,17 +21,67 @@ import ctypes
 import glob
 
 
+def _find_clipp_library(current_folder):
+    root_folder = os.path.abspath(os.path.join(current_folder, ".."))
+    patterns = [
+        os.path.join(root_folder, "CliPP*%s*.so" % (sys.platform)),
+        os.path.join(root_folder, "build", "*", "CliPP*%s*.so" % (sys.platform)),
+    ]
+    matches = []
+    for pattern in patterns:
+        matches.extend(glob.glob(pattern))
+    if not matches:
+        return None
+    return max(matches, key=os.path.getmtime)
+
+
+CLIPP_ARGTYPES = [
+    ctypes.c_int,
+    np.ctypeslib.ndpointer(dtype=np.int32),
+    np.ctypeslib.ndpointer(dtype=np.int32),
+    np.ctypeslib.ndpointer(dtype=np.int32),
+    np.ctypeslib.ndpointer(dtype=np.int32),
+    ctypes.c_double,
+    np.ctypeslib.ndpointer(dtype=np.float64),
+    ctypes.c_int,
+    ctypes.c_double,
+    ctypes.c_double,
+    ctypes.c_double,
+    ctypes.c_int,
+    ctypes.c_double,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_double,
+    ctypes.c_double,
+    np.ctypeslib.ndpointer(dtype=np.float64),
+    np.ctypeslib.ndpointer(dtype=np.float64),
+    ctypes.c_double,
+    ctypes.c_char_p,
+]
+
+
+def _get_clipp_entrypoint(clipp_lib):
+    clipp_status = getattr(clipp_lib, "CliPPStatus", None)
+    if clipp_status is not None:
+        clipp_status.argtypes = CLIPP_ARGTYPES
+        clipp_status.restype = ctypes.c_int
+        return clipp_status, True
+
+    clipp_lib.CliPP.argtypes = CLIPP_ARGTYPES
+    clipp_lib.CliPP.restype = None
+    return clipp_lib.CliPP, False
+
+
 def run_clipp_nosub(prefix, preliminary_result, lambda_list):
     if not os.path.exists(preliminary_result):
         os.makedirs(preliminary_result)
         
     current_folder = os.path.dirname(os.path.abspath(__file__))
-    clipp_lib_path = glob.glob(os.path.join(current_folder, "../build/*/CliPP*%s*.so" %(sys.platform)))
+    clipp_lib_path = _find_clipp_library(current_folder)
     if not clipp_lib_path:
         sys.stderr.write("Cannot find shared lib. Make sure run run python setup.py build first.\n")
         sys.exit(0)
 
-    clipp_lib_path = clipp_lib_path[0]
     if not os.path.isfile(clipp_lib_path):
         sys.stderr.write("Cannot find shared lib. Make sure run run python setup.py build first.\n")
         sys.exit(0)
@@ -78,11 +128,10 @@ def run_clipp_nosub(prefix, preliminary_result, lambda_list):
     coef = coef.astype(np.float64)
     wcut = wcut.astype(np.float64)
 
-    clipp_lib.CliPP.restype = None
-
-    clipp_lib.CliPP.argtypes = [ctypes.c_int, np.ctypeslib.ndpointer(dtype=np.int32),np.ctypeslib.ndpointer(dtype=np.int32),np.ctypeslib.ndpointer(dtype=np.int32), np.ctypeslib.ndpointer(dtype=np.int32), ctypes.c_double,np.ctypeslib.ndpointer(dtype=np.float64), ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double, ctypes.c_int,ctypes.c_int, ctypes.c_double, ctypes.c_double, np.ctypeslib.ndpointer(dtype=np.float64), np.ctypeslib.ndpointer(dtype=np.float64), ctypes.c_double, ctypes.c_char_p]
-
-    clipp_lib.CliPP(No_mutation, r, n, minor, total, ploidy,
+    clipp_entrypoint, returns_status = _get_clipp_entrypoint(clipp_lib)
+    status = clipp_entrypoint(No_mutation, r, n, minor, total, ploidy,
                   Lambda_list, Lambda_num, alpha, rho, gamma, Run_limit, precision,
                   control_large, least_mut, post_th, least_diff,
                   coef, wcut, purity, preliminary_result.encode('utf-8'))
+    if returns_status and status != 0:
+        raise RuntimeError("CliPP failed with status %s" % status)

@@ -148,24 +148,48 @@ No.mutations   <- length(valid.ind)
 
 # process copy number
 
-cn.tmp         <- read.table(cn.file,header=T, stringsAsFactors = F)
-cn.tmp         <- cn.tmp[which(!is.na(cn.tmp[,"minor_cn"])),]
+cn.tmp         <- read.table(cn.file, header = TRUE, stringsAsFactors = FALSE)
+cn.tmp         <- cn.tmp[which(!is.na(cn.tmp[, "minor_cn"])), ]
 No.cnLines     <- nrow(cn.tmp)
 if(No.cnLines == 0){
-    stop(sprintf('The sample with SNV %s does not have valid copy number status.',snv.file))
+    stop(sprintf('The sample with SNV %s does not have valid copy number status.', snv.file))
 }
-mut.cna.id     <- unlist(lapply(1:No.mutations, function(x){
-    ret.val <- -1
-    for(i in 1:No.cnLines){
-        if( mutation.chrom[x] == cn.tmp[i, "chromosome_index"]
-            && mutation.pos[x] >= cn.tmp[i, "start_position"]
-            && mutation.pos[x] <= cn.tmp[i, "end_position"]){
-            ret.val <- i
-            break
-        }
-    }
-    return(ret.val)
-}))
+
+if (!requireNamespace("data.table", quietly = TRUE)) {
+    stop("The data.table package is required for fast CNA interval matching.")
+}
+
+snv.dt <- data.table::data.table(
+    mut_id = seq_len(No.mutations),
+    chromosome_index = mutation.chrom,
+    position = mutation.pos
+)
+
+cn.dt <- data.table::as.data.table(cn.tmp)
+cn.dt[, seg_id := .I]
+
+hits <- cn.dt[
+    snv.dt,
+    on = .(
+        chromosome_index,
+        start_position <= position,
+        end_position >= position
+    ),
+    nomatch = 0,
+    allow.cartesian = TRUE
+]
+
+# Keep the same behavior as the original loop:
+# if multiple CNA segments match one SNV, use the first matching CNA row.
+if (nrow(hits) > 0) {
+    data.table::setorder(hits, mut_id, seg_id)
+    hits <- hits[, .SD[1], by = mut_id]
+}
+
+mut.cna.id <- rep(-1L, No.mutations)
+if (nrow(hits) > 0) {
+    mut.cna.id[hits$mut_id] <- hits$seg_id
+}
 valid.ind      <- which(mut.cna.id > 0)
 drop.ind       <- setdiff(1:length(minor.read),valid.ind)
 dropped.SNV    <- append(dropped.SNV,CombineReasons(mutation.chrom, mutation.pos, drop.ind, "The SNV does not have valid copy number."))
@@ -188,6 +212,16 @@ minor.count[minor.count == 0] <- 1
 valid.ind      <- intersect(which(minor.count>0),which(total.count>0))
 drop.ind       <- setdiff(1:length(minor.read),valid.ind)
 dropped.SNV    <- append(dropped.SNV,CombineReasons(mutation.chrom, mutation.pos, drop.ind, "The SNV has negative multiplicities."))
+if(length(valid.ind) < VALID.CONT ){
+    stop(sprintf('The sample with SNV %s has less than %d SNVs that have positive copy number and multiplicity.',snv.file,VALID.CONT))
+}
+mutation.chrom <- mutation.chrom[valid.ind]
+mutation.pos   <- mutation.pos[valid.ind]
+minor.read     <- minor.read[valid.ind]
+total.read     <- total.read[valid.ind]
+minor.count    <- minor.count[valid.ind]
+total.count    <- total.count[valid.ind]
+No.mutations   <- length(valid.ind)
 
 sample.coef    <- matrix(0,nrow = No.mutations, ncol = 6)
 sample.cutbeta <- matrix(0,nrow = No.mutations, ncol = 2)

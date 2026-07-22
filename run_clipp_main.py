@@ -10,6 +10,8 @@ if not (version_morph >= version_base):
     sys.exit(-1)
 
 import argparse
+import ctypes
+import glob
 import subprocess
 import shutil
 import time
@@ -20,6 +22,90 @@ sys.path.insert(0, os.path.join(current_dir, "src"))
 from run_kernel_nosub import run_clipp_nosub
 from run_kernel_sub import run_clipp_sub
 from penalty_selection import run_lambda_selection
+
+
+CUDA_MIN_SNV_COUNT = 1000
+
+
+def _find_clipp_library():
+    patterns = [
+        os.path.join(current_dir, "CliPP*%s*.so" % (sys.platform)),
+        os.path.join(current_dir, "build", "*", "CliPP*%s*.so" % (sys.platform)),
+    ]
+    matches = []
+    for pattern in patterns:
+        matches.extend(glob.glob(pattern))
+    if not matches:
+        return None
+    return max(matches, key=os.path.getmtime)
+
+
+def warmup_cuda_if_available():
+    if os.environ.get("CLIPP_FORCE_CPU"):
+        return False
+
+    clipp_lib_path = _find_clipp_library()
+    if clipp_lib_path is None:
+        print("CUDA warmup skipped; no CliPP shared library was found.")
+        return False
+
+    try:
+        clipp_lib = ctypes.CDLL(clipp_lib_path)
+        warmup = getattr(clipp_lib, "CliPPWarmupCUDA", None)
+        if warmup is None:
+            print("CUDA warmup skipped; CUDA backend is not built.")
+            return False
+
+        warmup.argtypes = []
+        warmup.restype = ctypes.c_int
+
+        print("Warming up CUDA...")
+        status = warmup()
+        if status == 0:
+            print("CUDA warmup finished.")
+            return True
+        else:
+            print("CUDA warmup skipped; CUDA backend is unavailable at runtime.")
+            return False
+    except Exception as err:
+        print("CUDA warmup skipped: %s" % err)
+        return False
+
+
+def count_preprocessed_snvs(preprocess_dir):
+    r_path = os.path.join(preprocess_dir, "r.txt")
+    try:
+        with open(r_path, "r") as handle:
+            return sum(1 for line in handle if line.strip() != "")
+    except OSError as err:
+        raise RuntimeError("Cannot read preprocessed SNV count from %s: %s" % (r_path, err))
+
+
+def select_backend_after_preprocess(preprocess_dir):
+    snv_count = count_preprocessed_snvs(preprocess_dir)
+    print("Preprocessed SNVs: %d" % snv_count)
+
+    if os.environ.get("CLIPP_FORCE_CPU"):
+        print("CliPP backend auto-selection: CPU (CLIPP_FORCE_CPU is set).")
+        return snv_count
+
+    if snv_count <= CUDA_MIN_SNV_COUNT:
+        os.environ["CLIPP_FORCE_CPU"] = "1"
+        print(
+            "CliPP backend auto-selection: CPU "
+            "(preprocessed SNVs <= %d; CUDA requires > %d)."
+            % (CUDA_MIN_SNV_COUNT, CUDA_MIN_SNV_COUNT)
+        )
+        return snv_count
+
+    print("CliPP backend auto-selection: checking CUDA (preprocessed SNVs > %d)." % CUDA_MIN_SNV_COUNT)
+    if warmup_cuda_if_available():
+        print("CliPP backend auto-selection: CUDA.")
+    else:
+        os.environ["CLIPP_FORCE_CPU"] = "1"
+        print("CliPP backend auto-selection: CPU (CUDA is unavailable).")
+    return snv_count
+
 
 parser = argparse.ArgumentParser()
 
@@ -96,6 +182,7 @@ if "error" in _stderr.decode().strip().lower():
     print(_stderr.decode().strip())
     sys.exit(-1)
 print("Preprocessing finished.")
+select_backend_after_preprocess(path_for_preprocess)
 
 run_postprocess = os.path.join(current_dir, "src/postprocess.R")
 # run_lambda_selection = os.path.join(current_dir, "src/penalty_selection.py")
@@ -107,7 +194,7 @@ if not args.subsampling:
     run_clipp_nosub(path_for_preprocess, path_for_preliminary, lambda_list)
     end = time.time()
     elapsed_time = end - start
-    print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
+    print("\nElapsed time: %.6fsec" % elapsed_time + "\n")
 	
     # Run postprocessing
 
@@ -143,7 +230,7 @@ else:
  
     end = time.time()
     elapsed_time = end - start
-    print("\nElapsed time: %.2fsec" % elapsed_time + "\n")
+    print("\nElapsed time: %.6fsec" % elapsed_time + "\n")
     
     # Run postprocessing
     p_postprocess = subprocess.Popen(["Rscript", 

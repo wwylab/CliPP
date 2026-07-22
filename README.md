@@ -13,7 +13,7 @@ Clonal structure identification through penalizing pairwise differences
 - [Citation](#citation)
 
 ## Introduction
-Subpopulations of tumor cells characterized by mutation profiles may confer differential fitness and consequently influence prognosis of cancers. Understanding subclonal architecture has the potential to provide biological insight in tumor evolution and advance precision cancer treatment. Recent methods comprehensively integrate single nucleotide variants (SNVs) and copy number aberrations (CNAs) to reconstruct subclonal architecture using whole-genome or whole-exome sequencing (WGS, WES) data from bulk tumor samples. However, the commonly used Bayesian methods require a large amount of computational resources, a prior knowledge of the number of subclones, and extensive post-processing. Regularized likelihood modeling approach, never explored for subclonal reconstruction, can inherently address these drawbacks. We therefore propose a model-based method, Clonal structure identification through Pair-wise Penalization, or CliPP, for clustering subclonal mutations without prior knowledge or post-processing. The CliPP model is applicable to genomic regions with or without CNAs. CliPP demonstrates high accuracy in subclonal reconstruction through extensive simulation studies. A penalized likelihood framework for subclonal reconstruction will help address intrinsic drawbacks of existing methods and expand the scope of computational analysis for cancer evolution in large cancer genomic studies. Also see our paper: https://www.biorxiv.org/content/10.1101/2021.03.31.437383v1.
+Subpopulations of tumor cells characterized by mutation profiles may confer differential fitness and consequently influence prognosis of cancers. Understanding subclonal architecture has the potential to provide biological insight in tumor evolution and advance precision cancer treatment. Recent methods comprehensively integrate single nucleotide variants (SNVs) and copy number aberrations (CNAs) to reconstruct subclonal architecture using whole-genome or whole-exome sequencing (WGS, WES) data from bulk tumor samples. However, the commonly used Bayesian methods require a large amount of computational resources, a prior knowledge of the number of subclones, and extensive post-processing. Regularized likelihood modeling approach, never explored for subclonal reconstruction, can inherently address these drawbacks. We therefore propose a model-based method, Clonal structure identification through Pair-wise Penalization, or CliPP, for clustering subclonal mutations without prior knowledge or post-processing. The CliPP model is applicable to genomic regions with or without CNAs. CliPP demonstrates high accuracy in subclonal reconstruction through extensive simulation studies. A penalized likelihood framework for subclonal reconstruction will help address intrinsic drawbacks of existing methods and expand the scope of computational analysis for cancer evolution in large cancer genomic studies. Also see our paper: https://www.biorxiv.org/content/10.1101/2021.03.31.437383v2.
 
 
 ## Prerequisites
@@ -25,6 +25,7 @@ Subpopulations of tumor cells characterized by mutation profiles may confer diff
 - NumPy
 - SciPy
 - pandas
+- Optional CUDA acceleration on Linux requires an NVIDIA GPU and driver (`libcuda`), plus the `nvidia-cuda-runtime-cu12` and `nvidia-cuda-nvrtc-cu12` Python packages.
 
 ## Setting up CliPP
 
@@ -36,9 +37,19 @@ cd CliPP
 python setup.py build
 ```
 
+For optional CUDA acceleration on Linux:
+```bash
+python -m pip install nvidia-cuda-runtime-cu12 nvidia-cuda-nvrtc-cu12
+CLIPP_USE_CUDA=1 python setup.py build
+```
+
+CUDA is otherwise detected automatically at build time. Use `CLIPP_USE_CUDA=0 python setup.py build` to force a CPU-only build.
+
 
 ### Docker container
 We also include a `Dockerfile` in the repository. The user can build and run a Docker contrainer of CliPP to avoid any issues caused by package dependencies. The following provides a tutorial about this. 
+
+**CUDA note**: The provided `Dockerfile` builds the CPU backend; use the manual installation steps above for CUDA.
 
 - Download and install `Docker` (https://docs.docker.com/get-docker/).
 - Download the `Dockerfile` from this repository. Alternatively, you can clone the whole repository to your machine.
@@ -67,6 +78,8 @@ The flow chart below shows the CliPP implementation. Raw functions and scripts a
 Approximately, CliPP can run on samples with up to 50,000 SNVs on a machine with 256GB memory. It may require more memory when there are more SNVs. When that happens, we apply a downsampling strategy, as implemented in all other subclonal reconstruction methods. 
 
 Furthermore, CliPP is automatically run in parallel when users have multiple cores available.
+
+For the one-step runner, a CUDA-enabled build uses CUDA automatically when more than 1,000 SNVs remain after preprocessing and a CUDA device is available; otherwise, CliPP uses the CPU backend. Set `CLIPP_FORCE_CPU=1` to force the CPU backend at runtime.
 
 ## Input data sample
 There are three required input files:
@@ -171,9 +184,9 @@ If you are using this framework, please cite our methods description on bioRxiv:
 ```
 @article{CliPPmethod,
     title = {Pan-cancer subclonal mutation analysis of 7,827 tumors predicts clinical outcome},
-    author = {Jiang, Yujie and Montierth, Matthew D and Yu, Kaixian and Ji, Shuangxi and Guo, Shuai and Tran, Quang and Liu, Xiaoqian and Shin, Seung Jun and Cao, Shaolong and Li, Ruonan and Tang, Yuxin and Lesluyes, Tom and Kopetz, Scott and Ajani, Jaffer and Msaouel, Pavlos and Subudhi, Sumit K  and Aparicio, Ana and Sharma, Padmanee and Shen, John Paul and Sood, Anil K and Tarabichi, Maxime and Wang, Jennifer R and Kimmel, Marek and Van Loo, Peter and Zhu, Hongtu and Wang, Wenyi},
+    author = {Yujie Jiang,  Matthew D Montierth, Yu Ding, Kaixian Yu, Quang Tran, Aaron Wu, Ruonan Li, Shuangxi Ji, Xiaoqian Liu, Seung Jun Shin, Shaolong Cao, Yuxin Tang, Tom Lesluyes, Marek Kimmel, Jennifer R. Wang, Maxime Tarabichi, Hongtu Zhu,  Peter Van Loo,  Wenyi Wang},
     journal = {bioRxiv},
-    year = {2024},
+    year = {2026},
     publisher = {Cold Spring Harbor Laboratory}
 }
 ```

@@ -183,7 +183,7 @@ The second file outputs a detailed list of mutation assignment result, i.e., for
 If you are using this framework, please cite our methods description on bioRxiv:
 ```
 @article{CliPPmethod,
-    title = {Pan-cancer subclonal mutation analysis of 7,827 tumors predicts clinical outcome},
+    title = {Scalable subclonal reconstruction of cancer cells in DNA sequencing data using a penalized likelihood model},
     author = {Yujie Jiang,  Matthew D Montierth, Yu Ding, Kaixian Yu, Quang Tran, Aaron Wu, Ruonan Li, Shuangxi Ji, Xiaoqian Liu, Seung Jun Shin, Shaolong Cao, Yuxin Tang, Tom Lesluyes, Marek Kimmel, Jennifer R. Wang, Maxime Tarabichi, Hongtu Zhu,  Peter Van Loo,  Wenyi Wang},
     journal = {bioRxiv},
     year = {2026},

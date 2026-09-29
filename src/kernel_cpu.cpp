@@ -14,6 +14,10 @@
 using Eigen::MatrixXd;
 using Eigen::MatrixXi;
 
+// Pair counts and offsets need 64 bits: n * (n - 1) overflows int at n = 46342.
+// Mutation indices remain int because they are bounded by n.
+using pair_index_t = long long;
+
 using namespace std;
 
 #define expit(a) (1/(1+exp(-(a))))
@@ -27,7 +31,7 @@ double ST(double x, double lam){
     return (0.0);
 }
 
-int  CliPPIndividual(int, MatrixXd &, MatrixXd &, MatrixXd &, MatrixXd &, double, double, double, double, double, int, double, int, int, double, double, MatrixXd &, MatrixXd &, double, std::string &, MatrixXd &, MatrixXd &, MatrixXi &, const std::vector<int> &, double);
+int  CliPPIndividual(int, MatrixXd &, MatrixXd &, MatrixXd &, MatrixXd &, double, double, double, double, double, int, double, int, int, double, double, MatrixXd &, MatrixXd &, double, std::string &, MatrixXd &, MatrixXd &, MatrixXi &, const std::vector<pair_index_t> &, double);
 
 
 
@@ -48,10 +52,12 @@ int CliPPCPP(int No_mutation, int* c_r, int *c_n, int *c_minor, int *c_total, do
     Eigen::setNbThreads(1);
 #endif
     
-    int p_i, p_j, p_count;
+    int p_i, p_j;
+    pair_index_t p_count;
 
     //double Lambda = Lambda_list[6];
-    const int pair_count = No_mutation * (No_mutation - 1) / 2;
+    const pair_index_t pair_count =
+        static_cast<pair_index_t>(No_mutation) * (No_mutation - 1) / 2;
     
     MatrixXd r(No_mutation, 1);
     MatrixXd n(No_mutation, 1);
@@ -61,7 +67,7 @@ int CliPPCPP(int No_mutation, int* c_r, int *c_n, int *c_minor, int *c_total, do
     MatrixXd phi_hat(No_mutation, 1);
     
     MatrixXi ids(pair_count, 2);
-    std::vector<int> pair_start(No_mutation, 0);
+    std::vector<pair_index_t> pair_start(No_mutation, 0);
     MatrixXd wcut_1d(No_mutation * 2, 1);
     MatrixXd coef_1d(No_mutation * 6, 1);
     
@@ -126,11 +132,12 @@ int CliPPCPP(int No_mutation, int* c_r, int *c_n, int *c_minor, int *c_total, do
     return 0;
 }
 
-int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_, MatrixXd &total, double ploidy, double Lambda, double alpha, double rho, double gamma, int Run_limit, double precision, int control_large, int least_mut, double post_th, double least_diff, MatrixXd &coef_1d, MatrixXd &wcut_1d, double purity, std::string &preliminary_folder, MatrixXd &theta_hat, MatrixXd &phi_hat, MatrixXi &ids, const std::vector<int> &pair_start, double scale_parameter)
+int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_, MatrixXd &total, double ploidy, double Lambda, double alpha, double rho, double gamma, int Run_limit, double precision, int control_large, int least_mut, double post_th, double least_diff, MatrixXd &coef_1d, MatrixXd &wcut_1d, double purity, std::string &preliminary_folder, MatrixXd &theta_hat, MatrixXd &phi_hat, MatrixXi &ids, const std::vector<pair_index_t> &pair_start, double scale_parameter)
 {
     
     int i, j, k, count;
-    const int pair_count = No_mutation * (No_mutation - 1) / 2;
+    const pair_index_t pair_count =
+        static_cast<pair_index_t>(No_mutation) * (No_mutation - 1) / 2;
     
     MatrixXd theta(No_mutation, 1);
     MatrixXd w_new(No_mutation, 1);
@@ -162,8 +169,8 @@ int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for(i = 0; i < pair_count; i++){
-	eta_new(i, 0) = w_new(ids(i, 0), 0) - w_new(ids(i, 1), 0);    
+    for(pair_index_t p = 0; p < pair_count; p++){
+	eta_new(p, 0) = w_new(ids(p, 0), 0) - w_new(ids(p, 1), 0);
     }
     
     MatrixXd A(No_mutation, 1);
@@ -222,9 +229,9 @@ int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_
 	
 	linear.setZero();
 	for(i = 0; i < No_mutation - 1; i++){
-	    int start = pair_start[i];
+	    pair_index_t start = pair_start[i];
 	    for(j = i + 1; j < No_mutation; j++){
-		int pair_index = start + j - i - 1;
+		pair_index_t pair_index = start + j - i - 1;
 		double pair_value = alpha * eta_old(pair_index, 0) + tau_old(pair_index, 0);
 		linear(i, 0) += pair_value;
 		linear(j, 0) -= pair_value;
@@ -256,9 +263,9 @@ int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_
 #ifdef _OPENMP
 #pragma omp parallel for private(tag1, tag2, tag3, tag4, temp) reduction(max:max_val)
 #endif
-	for(i = 0; i < pair_count; i++){
-	    const double pair_diff = w_new(ids(i, 0), 0) - w_new(ids(i, 1), 0);
-	    temp = pair_diff - 1.0/alpha * tau_old(i, 0);
+	for(pair_index_t p = 0; p < pair_count; p++){
+	    const double pair_diff = w_new(ids(p, 0), 0) - w_new(ids(p, 1), 0);
+	    temp = pair_diff - 1.0/alpha * tau_old(p, 0);
 	    if(fabs(temp) > gamma * Lambda) {
 		tag1 = 1.0; tag3 = 0.0;
 	    }else{
@@ -270,10 +277,10 @@ int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_
 	    }else{
 		tag2 = 0.0; tag4 = 1.0;
 	    }
-	    eta_new(i, 0) = temp * tag1 + ST(temp, Lambda / alpha) * tag2 + ST(temp, gamma * Lambda / ((gamma - 1.0) * alpha)) / (1.0 - 1.0 / ((gamma - 1.0) * alpha)) * tag3 *tag4;
+	    eta_new(p, 0) = temp * tag1 + ST(temp, Lambda / alpha) * tag2 + ST(temp, gamma * Lambda / ((gamma - 1.0) * alpha)) / (1.0 - 1.0 / ((gamma - 1.0) * alpha)) * tag3 *tag4;
 
-	    tau_new(i, 0) = tau_old(i, 0) - alpha * (pair_diff - eta_new(i, 0));
-	    const double residual_i = pair_diff - eta_new(i, 0);
+	    tau_new(p, 0) = tau_old(p, 0) - alpha * (pair_diff - eta_new(p, 0));
+	    const double residual_i = pair_diff - eta_new(p, 0);
 	    if (residual_i > max_val){
 		max_val = residual_i;
 	    }
@@ -295,8 +302,8 @@ int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for(i = 0; i < pair_count; i++){
-	if(fabs(eta_new(i, 0)) <= post_th) eta_new(i, 0) = 0.0;
+    for(pair_index_t p = 0; p < pair_count; p++){
+	if(fabs(eta_new(p, 0)) <= post_th) eta_new(p, 0) = 0.0;
     } 
     
     std::vector<int> class_label(No_mutation);
@@ -310,7 +317,7 @@ int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_
 
     for(i = 0; i < No_mutation; i++){
 	for(j = 0; j < i; j++){
-	    int pair_index = pair_start[j] + i - j - 1;
+	    pair_index_t pair_index = pair_start[j] + i - j - 1;
 	    if(eta_new(pair_index, 0) == 0.0){
 		class_label[i] = class_label[j];
 		group_size[class_label[j]] = group_size[class_label[j]] + 1;
@@ -346,8 +353,8 @@ int  CliPPIndividual(int No_mutation, MatrixXd &r, MatrixXd &n, MatrixXd &minor_
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-	for(i = 0; i < pair_count; i++){
-	    diff(ids(i, 0), ids(i, 1)) = eta_new(i, 0);
+	for(pair_index_t p = 0; p < pair_count; p++){
+	    diff(ids(p, 0), ids(p, 1)) = eta_new(p, 0);
 	}
 	tmp_diff.resize(No_mutation, 1);
     }

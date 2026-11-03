@@ -63,7 +63,7 @@ if(length(Lambda_list) == 0){
 # }
 
 if(!dir.exists(output.prefix)){
-	dir.create(output.prefix)
+	dir.create(output.prefix, recursive = TRUE)
 }
 
 # If user does not specify the lambda value 

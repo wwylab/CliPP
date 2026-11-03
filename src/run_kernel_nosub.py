@@ -88,13 +88,13 @@ def run_clipp_nosub(prefix, preliminary_result, lambda_list):
         
     clipp_lib = ctypes.CDLL(clipp_lib_path)
     
-    r = genfromtxt(prefix+"r.txt", delimiter="\t")
-    n = genfromtxt(prefix+"n.txt", delimiter="\t")
-    minor = genfromtxt(prefix+"minor.txt", delimiter="\t")
-    total = genfromtxt(prefix+"total.txt", delimiter="\t")
-    purity = genfromtxt(prefix+"purity_ploidy.txt", delimiter="\t")
-    coef = genfromtxt(prefix+"coef.txt", delimiter="\t")
-    phicut = genfromtxt(prefix+"cutbeta.txt", delimiter=" ")
+    r = genfromtxt(os.path.join(prefix, "r.txt"), delimiter="\t")
+    n = genfromtxt(os.path.join(prefix, "n.txt"), delimiter="\t")
+    minor = genfromtxt(os.path.join(prefix, "minor.txt"), delimiter="\t")
+    total = genfromtxt(os.path.join(prefix, "total.txt"), delimiter="\t")
+    purity = genfromtxt(os.path.join(prefix, "purity_ploidy.txt"), delimiter="\t")
+    coef = genfromtxt(os.path.join(prefix, "coef.txt"), delimiter="\t")
+    phicut = genfromtxt(os.path.join(prefix, "cutbeta.txt"), delimiter=" ")
     wcut = phicut
     No_mutation = len(r)
     least_mut = np.ceil(0.05 * No_mutation)

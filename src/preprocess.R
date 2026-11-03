@@ -299,9 +299,14 @@ sample.cutbeta <- sample.cutbeta[valid.ind,]
 No.mutations   <- length(valid.ind)
 
 index          <- cbind(mutation.chrom,mutation.pos,total.count, minor.count)
+# Raw CCF for retained mutations, assuming diploid normal copy number.
+mutation.ccf   <- (minor.read / total.read) *
+                  (purity * total.count + 2 * (1 - purity)) / (purity * minor.count)
+
 # output preprocessed results
 output.r       <- sprintf("%s/r.txt",output.prefix)
 output.n       <- sprintf("%s/n.txt",output.prefix)
+output.ccf     <- sprintf("%s/mutation_ccf.txt",output.prefix)
 output.minor   <- sprintf("%s/minor.txt",output.prefix)
 output.total   <- sprintf("%s/total.txt",output.prefix)
 output.index   <- sprintf("%s/multiplicity.txt",output.prefix)
@@ -312,6 +317,7 @@ output.cutbeta <- sprintf("%s/cutbeta.txt",output.prefix)
 output.dropped <- sprintf("%s/excluded_SNVs.txt",output.prefix)
 write.table(minor.read, output.r,  quote=F, col.names = F, row.names = F)
 write.table(total.read, output.n,  quote=F, col.names = F, row.names = F)
+write.table(mutation.ccf, output.ccf, quote=F, col.names = F, row.names = F)
 write.table(minor.count, output.minor,  quote=F, col.names = F, row.names = F)
 write.table(total.count, output.total,  quote=F, col.names = F, row.names = F)
 write.table(index, output.index,  quote=F, col.names = F, row.names = F)

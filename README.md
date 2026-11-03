@@ -3,14 +3,19 @@ Clonal structure identification through penalizing pairwise differences
 
 ## Contents
 
-- [Introduction](#introduction)
-- [Prerequisites](#prerequisites)
-- [Setting up CliPP](#setting-up-clipp)
-- [Structure of CliPP implementation](#structure-of-clipp-implementation)
-- [Input data sample](#input-data-sample)
-- [Running CliPP with one-step implementation](#running-clipp-with-one-step-implementation)
-- [The CliPP Outputs](#the-clipp-outputs)
-- [Citation](#citation)
+- [CliPP](#clipp)
+  - [Contents](#contents)
+  - [Introduction](#introduction)
+  - [Prerequisites](#prerequisites)
+  - [Setting up CliPP](#setting-up-clipp)
+    - [Manual Install](#manual-install)
+    - [Docker container](#docker-container)
+  - [Structure of CliPP implementation](#structure-of-clipp-implementation)
+  - [Input data sample](#input-data-sample)
+  - [Running CliPP with one-step implementation](#running-clipp-with-one-step-implementation)
+  - [The CliPP Outputs](#the-clipp-outputs)
+    - [Demo output](#demo-output)
+  - [Citation](#citation)
 
 ## Introduction
 Subpopulations of tumor cells characterized by mutation profiles may confer differential fitness and consequently influence prognosis of cancers. Understanding subclonal architecture has the potential to provide biological insight in tumor evolution and advance precision cancer treatment. Recent methods comprehensively integrate single nucleotide variants (SNVs) and copy number aberrations (CNAs) to reconstruct subclonal architecture using whole-genome or whole-exome sequencing (WGS, WES) data from bulk tumor samples. However, the commonly used Bayesian methods require a large amount of computational resources, a prior knowledge of the number of subclones, and extensive post-processing. Regularized likelihood modeling approach, never explored for subclonal reconstruction, can inherently address these drawbacks. We therefore propose a model-based method, Clonal structure identification through Pair-wise Penalization, or CliPP, for clustering subclonal mutations without prior knowledge or post-processing. The CliPP model is applicable to genomic regions with or without CNAs. CliPP demonstrates high accuracy in subclonal reconstruction through extensive simulation studies. A penalized likelihood framework for subclonal reconstruction will help address intrinsic drawbacks of existing methods and expand the scope of computational analysis for cancer evolution in large cancer genomic studies. Also see our paper: https://www.biorxiv.org/content/10.1101/2021.03.31.437383v2.
@@ -64,7 +69,7 @@ We also include a `Dockerfile` in the repository. The user can build and run a D
   ```
   git clone https://github.com/wwylab/CliPP.git
   cd CliPP
-  docker run -v $(pwd):/Sample clipp python3 /CliPP/run_clipp_main.py -i /Sample/test /Sample/sample/sample.snv.txt /Sample/sample/sample.cna.txt /Sample/sample/sample.purity.txt
+  docker run -v $(pwd):/Sample clipp python3 /CliPP/run_clipp_main.py -o /Sample/test /Sample/sample/sample.snv.txt /Sample/sample/sample.cna.txt /Sample/sample/sample.purity.txt
   ```
   
 **Note**: `-v $(pwd):/Sample` is to mount the the current directory in the host (the machine itself) to the container's directory of `/Sample`, so the input data in the current directory `sample/sample.cna.txt`, `sample/sample.cna.txt` and `sample/sample.purity.txt` can be seen by the container through `/Sample/sample/sample.snv.txt`, `/Sample/sample/sample.cna.txt`, `/Sample/sample/sample.purity.txt`. The output folder is located at `/Sample/test` in the container, which can be accessed at `$(pwd)/test` in the host machine. 
@@ -112,8 +117,8 @@ python run_clipp_main.py sample/sample.snv.txt sample/sample.cna.txt sample/samp
 A full manual is as follows:
 
 ```
-usage: run_clipp_main.py [-h] [-i SAMPLE_ID] [-e PREPROCESS] [-b] [-f FINAL] [-l LAM] 
-                        [-s SUBSAMPLE_SIZE] [-n REP_NUM] [-w WINDOW_SIZE] [-o OVERLAP_SIZE]
+usage: run_clipp_main.py [-h] [-i SAMPLE_ID] [-o OUTPUT_DIR] [-p PREPROCESS] [-b] [-f FINAL] [-l LAM]
+                        [-s SUBSAMPLE_SIZE] [-n REP_NUM] [-w WINDOW_SIZE] [--overlap_size OVERLAP_SIZE]
                         snv_input cn_input purity_input
 
 positional arguments:
@@ -126,6 +131,9 @@ optional arguments:
   -h, --help            show this help message and exit
   -i SAMPLE_ID, --sample_id SAMPLE_ID
                         Name of the sample being processed. Default is 'sample_id'.
+  -o OUTPUT_DIR, --output-dir OUTPUT_DIR
+                        Directory for all outputs. Relative paths are resolved from the working
+                        directory. Defaults to the sample ID under the CliPP directory.
   -l LAM, --lam LAM
                         The penalty parameter (lambda), which usually takes values from 0.01-0.25. 
                         If skipping this parameter, it will return a list of results that take value 
@@ -150,14 +158,23 @@ The followings parameters are only needed when doing subsampling. We take partit
   -w WINDOW_SIZE, --window_size WINDOW_SIZE
                         Controls the length of the window. Takes value between 0 and 1. Default 
                         is 0.05.
-  -o OVERLAP_SIZE, --overlap_size OVERLAP_SIZE
+  --overlap_size OVERLAP_SIZE
                         Controls the overlapped length of two consecutive windows. Takes value 
                         between 0 and 1. Default is 0.
 ```
 
 
 ## The CliPP Outputs
-By default, all outputs will be stored in the folder named `sample_id`, and this name can be changed with the `-i` or `--sample_id ` option.
+Use `-o` or `--output-dir` to choose the output folder. Relative paths are resolved from the current working directory. The `preprocess_result/` and `final_result/` folders are created directly inside the chosen folder:
+
+```bash
+python run_clipp_main.py sample/sample.snv.txt sample/sample.cna.txt sample/sample.purity.txt \
+  -i sampleA -o /path/to/results/sampleA
+```
+
+When `-o` is omitted, the output folder defaults to `sample_id` beside `run_clipp_main.py`. The `-i` or `--sample_id` option changes this default folder; existing absolute `-i` paths also remain supported. When `-o` is supplied, `-i` only identifies the sample.
+
+The `-p` and `-f` options accept paths relative to the output folder or absolute paths to separate locations. Missing parent directories are created automatically, and trailing slashes are optional.
 
 In final results, cluster index = 0 indicates clonal mutations, while non-zero cluster indexes indicate subclonal mutations.
 

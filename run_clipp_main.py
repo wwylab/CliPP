@@ -112,7 +112,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("snv_input", type=str, help="Path of the snv input.")
 parser.add_argument("cn_input", type=str, help="Path of the copy number input.")
 parser.add_argument("purity_input", type=str, help="Path of the purity input.")
-parser.add_argument("-i", "--sample_id", type=str, default="sample_id", help="Name of the sample being processed. Default is 'sample'.")
+parser.add_argument("-i", "--sample_id", type=str, default="sample_id", help="Name of the sample being processed. Default is 'sample_id'.")
+parser.add_argument("-o", "--output-dir", type=str, help="Directory for all outputs. Relative paths are resolved from the working directory. Defaults to the sample ID under the CliPP directory.")
 parser.add_argument("-b", "--subsampling", action='store_true', help="Whether doing subsampling or not. Default is not doing the subsampling, and a flag -b is needed when you want to do subsampling.")
 parser.add_argument("-l", "--lam", type=float, help="The penalty parameter (lambda), which usually takes values from 0.01-0.25. If skipping this parameter, it will return a list of results that take value of [0.01, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25] by default.")
 parser.add_argument("-p", "--preprocess", type=str, default="preprocess_result/", help="Directory that stores the preprocess results. Default name is 'preprocess_result/'.")
@@ -121,7 +122,7 @@ parser.add_argument("-f", "--final", type=str, default="final_result/", help="Di
 parser.add_argument("-s", "--subsample_size", type=int, help="(Required if doing subsampling) The number of SNVs you want to include in each subsamples.")
 parser.add_argument("-n", "--rep_num", type=int, help="(Required if doing subsampling) The number of random subsamples needed.")
 parser.add_argument("-w", "--window_size", type=float, default=0.05, help="Controls the length of the window. Takes value between 0 and 1. Default is 0.05.")
-parser.add_argument("-o", "--overlap_size", type=float, default=0.0, help="Controls the overlapped length of two consecutive windows. Takes value between 0 and 1. Default is 0.")
+parser.add_argument("--overlap_size", type=float, default=0.0, help="Controls the overlapped length of two consecutive windows. Takes value between 0 and 1. Default is 0.")
 
 args = parser.parse_args()
 
@@ -156,7 +157,13 @@ if args.lam is not None:
         sys.stderr.write(err)
         sys.exit(-1)
 
-result_dir = os.path.join(current_dir, sample_id)
+if args.output_dir is None:
+    result_dir = os.path.join(current_dir, sample_id)
+else:
+    if not args.output_dir.strip():
+        parser.error("--output-dir must not be empty.")
+    result_dir = os.path.abspath(os.path.expanduser(args.output_dir))
+
 if not os.path.exists(result_dir):
     os.makedirs(result_dir)
 
